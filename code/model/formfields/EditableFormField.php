@@ -1,22 +1,26 @@
 <?php
+
 /**
- * Represents the base class of a editable form field 
- * object like {@link EditableTextField}. 
- *
  * @package userforms
  */
 
 class EditableFormField extends DataObject {
 	
-	private static $default_sort = "Sort";
-	
 	/**
-	 * A list of CSS classes that can be added
-	 *
+	 * @var string
+	 */
+	private static $default_sort = "Sort ASC";
+
+	/**
 	 * @var array
 	 */
-	public static $allowed_css = array();
-	
+	private static $summary_fields = array(
+		'Title'
+	);
+
+	/**
+	 * @var array
+	 */
 	private static $db = array(
 		"Name" => "Varchar",
 		"Title" => "Varchar(255)",
@@ -25,48 +29,41 @@ class EditableFormField extends DataObject {
 		"Required" => "Boolean",
 		"CustomErrorMessage" => "Varchar(255)",
 		"CustomRules" => "Text",
-		"CustomSettings" => "Text",
-		"CustomParameter" => "Varchar(200)"
+		"CustomSettings" => "Text"
 	);
 
+	/**
+	 * @var array
+	 */
 	private static $has_one = array(
 		"Parent" => "UserDefinedForm",
 	);
 	
+	/**
+	 * @var array
+	 */
 	private static $extensions = array(
 		"Versioned('Stage', 'Live')"
 	);
 	
 	/**
-	 * @var bool
+	 * @return FieldList
 	 */
-	protected $readonly;
-	
-	/**
-	 * Set the visibility of an individual form field
-	 *
-	 * @param bool
-	 */ 
-	public function setReadonly($readonly = true) {
-		$this->readonly = $readonly;
-	}
+	public function getCMSFields() {
+		$fields = parent::getCMSFields();
 
-	/**
-	 * Returns whether this field is readonly 
-	 * 
-	 * @return bool
-	 */
-	private function isReadonly() {
-		return $this->readonly;
-	}
-	
-	/**
-	 * Template to render the form field into
-	 *
-	 * @return String
-	 */
-	public function EditSegment() {
-		return $this->renderWith('EditableFormField');
+		$fields->removeByName('Sort');
+		$fields->removeByName('Name');
+		$fields->removeByName('ParentID');
+
+		$fields->insertBefore(new ReadonlyField(
+			'Type', 
+			_t('EditableFormField.TYPE', 'Type'), 
+			$this->config()->get('singular_name')), 
+			'Title'
+		);
+
+		return $fields;
 	}
 	
 	/**
@@ -79,23 +76,23 @@ class EditableFormField extends DataObject {
 	}
 	
 	/**
-	 * Return whether a user can delete this form field
-	 * based on whether they can edit the page
+	 * Return whether a user can delete this form field based on whether they 
+	 * can edit the page.
 	 *
 	 * @return bool
 	 */
 	public function canDelete($member = null) {
-		return ($this->Parent()->canEdit($member = null) && !$this->isReadonly());
+		return ($this->Parent()->canEdit($member));
 	}
 	
 	/**
-	 * Return whether a user can edit this form field
-	 * based on whether they can edit the page
+	 * Return whether a user can edit this form field based on whether they can 
+	 * edit the page.
 	 *
 	 * @return bool
 	 */
 	public function canEdit($member = null) {
-		return ($this->Parent()->canEdit($member = null) && !$this->isReadonly());
+		return ($this->Parent()->canEdit($member));
 	}
 	
 	/**
@@ -108,39 +105,13 @@ class EditableFormField extends DataObject {
 	}
 	
 	/**
-	 * Delete this form from a given stage
+	 * Delete this form from a given stage.
 	 *
 	 * Wrapper for the {@link Versioned} deleteFromStage function
 	 */
 	public function doDeleteFromStage($stage) {
 		$this->deleteFromStage($stage);
 	}
-	
-	/**
-	 * checks wether record is new, copied from Sitetree
-	 */
-	function isNew() {
-		if(empty($this->ID)) return true;
-
-		if(is_numeric($this->ID)) return false;
-
-		return stripos($this->ID, 'new') === 0;
-	}
-
-	/**
-	 * checks if records is changed on stage
-	 * @return boolean
-	 */
-	public function getIsModifiedOnStage() {
-		// new unsaved fields could be never be published
-		if($this->isNew()) return false;
-
-		$stageVersion = Versioned::get_versionnumber_by_stage('EditableFormField', 'Stage', $this->ID);
-		$liveVersion =	Versioned::get_versionnumber_by_stage('EditableFormField', 'Live', $this->ID);
-
-		return ($stageVersion && $stageVersion != $liveVersion);
-	}
-
 	
 	/**
 	 * Show this form on load or not
@@ -186,19 +157,6 @@ class EditableFormField extends DataObject {
 	}
 
 	/**
-	 * Set the allowed css classes for the extraClass custom setting
-	 * 
-	 * @param array The permissible CSS classes to add
-	 */
-	public function setAllowedCss(array $allowed) {
-		if (is_array($allowed_css)){
-			foreach ($allowed_css as $k => $v){
-				self::$allowed_css[$k] = (!is_null($v)) ? $v : $k;
-			}
-		}
-	}
-
-	/**
 	 * Return just one custom setting or empty string if it does
 	 * not exist
 	 *
@@ -222,26 +180,6 @@ class EditableFormField extends DataObject {
 	 */
 	public function getIcon() {
 		return USERFORMS_DIR . '/images/' . strtolower($this->class) . '.png';
-	}
-	
-	/**
-	 * Return whether or not this field has addable options
-	 * such as a dropdown field or radio set
-	 *
-	 * @return bool
-	 */
-	public function getHasAddableOptions() {
-		return false;
-	}
-	
-	/**
-	 * Return whether or not this field needs to show the extra
-	 * options dropdown list
-	 * 
-	 * @return bool
-	 */
-	public function showExtraOptions() {
-		return true;
 	}
 	
 	/**
@@ -288,107 +226,7 @@ class EditableFormField extends DataObject {
 	
 		return $output;
 	}
-
-	/**
-	 * Title field of the field in the backend of the page
-	 *
-	 * @return TextField
-	 */
-	public function TitleField() {
-		$label = _t('EditableFormField.ENTERQUESTION', 'Enter Question');
-		
-		$field = new TextField('Title', $label, $this->getField('Title'));
-		$field->setName($this->getFieldName('Title'));
-
-		if(!$this->canEdit()) {
-			return $field->performReadonlyTransformation();
-		}
-
-		return $field;
-	}
-
-	/** Returns the Title for rendering in the front-end (with XML values escaped) */
-	public function getTitle() {
-		return Convert::raw2att($this->getField('Title'));
-	}
-
-	/**
-	 * Return the base name for this form field in the 
-	 * form builder. Optionally returns the name with the given field
-	 *
-	 * @param String Field Name
-	 *
-	 * @return String
-	 */
-	public function getFieldName($field = false) {
-		return ($field) ? "Fields[".$this->ID."][".$field."]" : "Fields[".$this->ID."]";
-	}
 	
-	/**
-	 * Generate a name for the Setting field
-	 *
-	 * @param String name of the setting
-	 * @return String
-	 */
-	public function getSettingName($field) {
-		$name = $this->getFieldName('CustomSettings');
-		
-		return $name . '[' . $field .']';
-	}
-	
-	/**
-	 * How to save the data submitted in this field into
-	 * the database object which this field represents.
-	 *
-	 * Any class's which call this should also call 
-	 * {@link parent::populateFromPostData()} to ensure 
-	 * that this method is called
-	 *
-	 * @access public
-	 */
-	public function populateFromPostData($data) {
-		$this->Title 		= (isset($data['Title'])) ? $data['Title']: "";
-		$this->Default 		= (isset($data['Default'])) ? $data['Default'] : "";
-		$this->Sort 		= (isset($data['Sort'])) ? $data['Sort'] : null;
-		$this->Required 	= !empty($data['Required']) ? 1 : 0;
-		$this->Name 		= $this->class.$this->ID;
-		$this->CustomRules	= "";
-		$this->CustomErrorMessage	= (isset($data['CustomErrorMessage'])) ? $data['CustomErrorMessage'] : "";
-		$this->CustomSettings		= "";
-		
-		// custom settings
-		if(isset($data['CustomSettings'])) {
-			$this->setSettings($data['CustomSettings']);
-		}
-
-		// custom validation
-		if(isset($data['CustomRules'])) {
-			$rules = array();
-			
-			foreach($data['CustomRules'] as $key => $value) {
-
-				if(is_array($value)) {
-					$fieldValue = (isset($value['Value'])) ? $value['Value'] : '';
-					
-					if(isset($value['ConditionOption']) && $value['ConditionOption'] == "Blank" || $value['ConditionOption'] == "NotBlank") {
-						$fieldValue = "";
-					}
-					
-					$rules[] = array(
-						'Display' => (isset($value['Display'])) ? $value['Display'] : "",
-						'ConditionField' => (isset($value['ConditionField'])) ? $value['ConditionField'] : "",
-						'ConditionOption' => (isset($value['ConditionOption'])) ? $value['ConditionOption'] : "",
-						'Value' => $fieldValue
-					);
-				}
-			}
-			
-			$this->CustomRules = serialize($rules);
-		}
-		
-		$this->write();
-	}
-	 
 	/**
 	 * Implement custom field Configuration on this field. Includes such things as
 	 * settings and options of a given editable form field
@@ -396,29 +234,6 @@ class EditableFormField extends DataObject {
 	 * @return FieldSet
 	 */
 	public function getFieldConfiguration() {
-		$extraClass = ($this->getSetting('ExtraClass')) ? $this->getSetting('ExtraClass') : '';
-
-		if (is_array(self::$allowed_css) && !empty(self::$allowed_css)) {
-			foreach(self::$allowed_css as $k => $v) {
-				if (!is_array($v)) $cssList[$k]=$v;
-				elseif ($k == $this->ClassName()) $cssList = array_merge($cssList, $v);
-			}
-			
-			$ec = new DropdownField(
-				$this->getSettingName('ExtraClass'), 
-				_t('EditableFormField.EXTRACLASSA', 'Extra Styling/Layout'), 
-				$cssList, $extraClass
-			);
-			
-		}
-		else {
-			$ec = new TextField(
-				$this->getSettingName('ExtraClass'), 
-				_t('EditableFormField.EXTRACLASSB', 'Extra css Class - separate multiples with a space'), 
-				$extraClass
-			);
-		}
-		
 		$right = new TextField(
 			$this->getSettingName('RightTitle'), 
 			_t('EditableFormField.RIGHTTITLE', 'Right Title'), 
@@ -427,8 +242,14 @@ class EditableFormField extends DataObject {
 
         $fields = FieldList::create(
             $ec,
-            $right
+            $right,
+            $hide = new CheckboxField(
+				$this->getSettingName('HideFromReports'),
+				_t('EditableFormField.HIDEFROMREPORT', 'Hide from reports?'), 
+				$this->getSetting('HideFromReports')
+			)
         );
+
         $this->extend('updateFieldConfiguration', $fields);
         
         return $fields;
@@ -458,41 +279,45 @@ class EditableFormField extends DataObject {
 	}
 	
 	/**
-	 * Return a FormField to appear on the front end. Implement on 
-	 * your subclass
+	 * Return a {@link FormField{} to appear on the front end. Implement on your 
+	 * subclass.
 	 *
 	 * @return FormField
 	 */
 	public function getFormField() {
-		user_error("Please implement a getFormField() on your EditableFormClass ". $this->ClassName, E_USER_ERROR);
+		user_error(
+			"Please implement a getFormField() on your EditableFormClass ". $this->ClassName, 
+			E_USER_ERROR
+		);
 	}
 	
 	/**
-	 * Return the instance of the submission field class
+	 * Return the instance of a {@link SubmittedFormField} class.
 	 *
 	 * @return SubmittedFormField
 	 */
 	public function getSubmittedFormField() {
-		return new SubmittedFormField();
+		return Injector::inst()->create('SubmittedFormField');
 	}
 	
 	
 	/**
-	 * Show this form field (and its related value) in the reports and in emails.
+	 * Show this form field (and its related value) in the reports and in
+	 * emails.
 	 *
 	 * @return bool
 	 */
-	public function showInReports() {
-		return true;
+	public function getShowInReports() {
+		return (!$this->getSetting('HideFromReports'));
 	}
  
 	/**
 	 * Return the validation information related to this field. This is 
-	 * interrupted as a JSON object for validate plugin and used in the 
-	 * PHP. 
+	 * interrupted as a JSON object for validate plugin and used in the PHP. 
 	 *
 	 * @see http://docs.jquery.com/Plugins/Validation/Methods
-	 * @return Array
+	 *
+	 * @return array
 	 */
 	public function getValidation() {
 		return $this->Required

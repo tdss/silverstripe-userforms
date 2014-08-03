@@ -66,4 +66,35 @@ class SubmittedFileField extends SubmittedFormField {
 			return $this->UploadedFile()->Name;
 		}
 	}
+
+	public function getValueFromData($field, $data, $form) {
+		if(isset($_FILES[$field->Name])) {
+			$folder = $field->getFormField()->getFolderName();
+			
+			$upload = new Upload();
+			
+			$file = new File();
+			$file->ShowInSearch = 0;
+
+			try {
+				$upload->loadIntoFile($_FILES[$field->Name], $file, $foldername);
+			} catch( ValidationException $e ) {
+				$form->addErrorMessage(
+					$field->Name, 
+					$e->getResult()->message(), 
+					'bad'
+				);
+
+				return false;
+			}
+
+			// write file to form field
+			$submittedField->UploadedFileID = $file->ID;
+			
+			// attach a file only if lower than 1MB
+			if($file->getAbsoluteSize() < 1024*1024*1){
+				$attachments[] = $file;
+			}
+		}
+	}
 }

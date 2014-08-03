@@ -52,7 +52,7 @@ class EditableFormHeading extends EditableFormField {
 		return $labelField;
 	}
 	
-	public function showInReports() {
+	public function getShowInReports() {
 		return (!$this->getSetting('HideFromReports'));
 	}
 	

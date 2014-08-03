@@ -55,8 +55,11 @@ class EditableFileField extends EditableFormField {
 	public function getValueFromData() {
 		return null;
 	}
-	
+		
+	/**
+	 * @return SubmittedFileField
+	 */
 	public function getSubmittedFormField() {
-		return new SubmittedFileField();
+		return Injector::inst()->create('SubmittedFileField');
 	}
 }

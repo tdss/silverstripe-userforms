@@ -25,12 +25,7 @@ class EditableLiteralField extends EditableFormField {
 		$textAreaField->setColumns(20);
 				
 		return new FieldList(
-			$textAreaField,
-			new CheckboxField(
-				$this->getSettingName('HideFromReports'),
-				_t('EditableLiteralField.HIDEFROMREPORT', 'Hide from reports?'), 
-				$this->getSetting('HideFromReports')
-			)
+			$textAreaField
 		);
 	}
 
@@ -44,9 +39,5 @@ class EditableLiteralField extends EditableFormField {
 				<div class='middleColumn literalFieldArea'>". $this->getSetting('Content') ."</div>".
 			"</div>"
 		);
-	}
-	
-	public function showInReports() {
-		return (!$this->getSetting('HideFromReports'));
 	}
 }
