@@ -4,6 +4,6 @@ jQuery(function($) {
 	 */
 	setInterval(function() {
 		// Ping every 3 mins.
-		$.ajax({url: "UserDefinedForm_Controller/ping"});
+		$.ajax({url: "UserFormsPingController/ping"});
 	}, 180*1000);
 });
