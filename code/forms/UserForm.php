@@ -5,14 +5,29 @@
  */
 class UserForm extends Form {
 	
-	private static $dataRecord;
+	/**
+	 * A {@link DataObject} with the {@link UserFormFieldEditorExtension} added.
+	 *
+	 * @var DataObject $dataSource
+	 */
+	private $dataSource;
 
-	public function __construct(Controller $controller, $record = null) {	
-		if(!$record) {
-			$record = $controller->dataRecord();
+	/**
+	 * @param Controller $controller
+	 * @param DataObject $dataSource
+	 * @param string $name
+	 */
+	public function __construct(Controller $controller, $dataSource = null, $name = 'Form') {	
+		if(!$dataSource && $controller->hasMethod('dataRecord')) {
+			$dataSource = $controller->dataRecord();
 		}
 
-		$this->dataRecord = $record;
+		if(!$dataSource->hasExtension('UserFormFieldEditorExtension')) {
+			throw new InvalidArgumentException('Your $dataSource must apply the UserFormFieldEditorExtension');
+		}
+
+		$this->dataSource = $dataSource;
+		$this->controller = $controller;
 
 		$lang = i18n::get_lang_from_locale(i18n::get_locale());
 		Requirements::javascript(FRAMEWORK_DIR .'/thirdparty/jquery/jquery.js');
@@ -37,11 +52,10 @@ class UserForm extends Form {
 		parent::__construct(
 			$controller, 
 			$name, 
-			$this->generateFieldList(), 
-			$this->generateActionList(), 
-			$this->generateRequiredFieldList()
+			$this->getFieldList(), 
+			$this->getActionButtonsList(), 
+			$this->getRequiredFieldList()
 		);
-
 
 		$data = Session::get("FormInfo.{$this->FormName()}.data");
 		
@@ -50,6 +64,7 @@ class UserForm extends Form {
 		}
 
 		$this->extend('updateForm', $controller);
+		$this->setFormAction('UserFormProcessController/process');
 	}
 
 	/**
@@ -59,7 +74,7 @@ class UserForm extends Form {
 		Session::set("FormInfo.{$this->FormName()}.data",$data);	
 		Session::clear("FormInfo.{$this->FormName()}.errors");
 		
-		foreach($this->generateFieldList() as $field) {
+		foreach($this->getFieldList() as $field) {
 			$messages[$field->Name] = $field->getErrorMessage()->HTML();
 			$formField = $field->getFormField();
 
@@ -89,48 +104,53 @@ class UserForm extends Form {
 	 * @return FieldList
 	 */
 	public function getFieldList() {
-		if($this->controller->Fields()) {
-			foreach($this->controller->Fields() as $editableField) {
-				// get the raw form field from the editable version
-				$field = $editableField->getFormField();
-				if(!$field) break;
+		$fields = new FieldList();
 
-				// set the error / formatting messages
-				$field->setCustomValidationMessage($editableField->getErrorMessage());
+		foreach($this->dataSource->UserFormFields() as $editableField) {
+			$field = $editableField->getFormField();
 
-				// set the right title on this field
-				if($right = $editableField->getSetting('RightTitle')) {
-					$field->setRightTitle($right);
-				}
-
-				// if this field is required add some
-				if($editableField->Required) {
-					$field->addExtraClass('requiredField');
-
-					if($identifier = UserDefinedForm::config()->required_identifier) {
-
-						$title = $field->Title() ." <span class='required-identifier'>". $identifier . "</span>";
-						$field->setTitle($title);
-					}
-				}
-				// if this field has an extra class
-				if($editableField->getSetting('ExtraClass')) {
-					$field->addExtraClass(Convert::raw2att(
-						$editableField->getSetting('ExtraClass')
-					));
-				}
-
-				// set the values passed by the url to the field
-				$request = $this->getRequest();
-				if($var = $request->getVar($field->name)) {
-					$field->value = Convert::raw2att($var);
-				}
-
-				$fields->push($field);
+			if(!$field) {
+				break;
 			}
-		}
 
+			$field->setCustomValidationMessage(
+				$editableField->getErrorMessage()
+			);
+
+			if($right = $editableField->getSetting('RightTitle')) {
+				$field->setRightTitle($right);
+			}
+
+			// if this field is required add some
+			if($editableField->Required) {
+				$field->addExtraClass('requiredField');
+
+				if($identifier = UserDefinedForm::config()->required_identifier) {
+
+					$title = $field->Title() ." <span class='required-identifier'>". $identifier . "</span>";
+					$field->setTitle($title);
+				}
+			}
+			
+			// if this field has an extra class
+			if($editableField->getSetting('ExtraClass')) {
+				$field->addExtraClass(Convert::raw2att(
+					$editableField->getSetting('ExtraClass')
+				));
+			}
+
+			$request = $this->controller->getRequest();
+
+			if($var = $request->getVar($field->name)) {
+				$field->value = Convert::raw2att($var);
+			}
+
+			$fields->push($field);
+		}
+	
 		$this->extend('updateFormFields', $fields);
+
+		return $fields;
 	}
 
 	/**
@@ -157,12 +177,9 @@ class UserForm extends Form {
 	 * @return RequiredFields
 	 */
 	public function getRequiredFieldList() {
-		// set the custom script for this form
-		Requirements::customScript($this->renderWith('ValidationScript'), 'UserFormsValidation');
-		
 		// Generate required field validator
-		$requiredNames = $this->dataRecord
-			->Fields()
+		$requiredNames = $this->dataSource
+			->UserFormFields()
 			->filter('Required', true)
 			->column('Name');
 
@@ -178,5 +195,14 @@ class UserForm extends Form {
 	 */
 	public function getProcessActions() {
 		return $this->controller->UserFormActions();
+	}
+
+	/**
+	 * @return HTML
+	 */
+	public function forTemplate() {
+		Requirements::customScript($this->renderWith('ValidationScript'), 'UserFormsValidation');
+
+		return parent::forTemplate();
 	}
 }	
