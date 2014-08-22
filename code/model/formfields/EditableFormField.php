@@ -36,7 +36,7 @@ class EditableFormField extends DataObject {
 	 * @var array
 	 */
 	private static $has_one = array(
-		"Parent" => "UserDefinedForm",
+		"Parent" => "DataObject",
 	);
 	
 	/**
