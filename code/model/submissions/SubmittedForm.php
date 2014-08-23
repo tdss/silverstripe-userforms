@@ -9,7 +9,7 @@ class SubmittedForm extends DataObject {
 	
 	private static $has_one = array(
 		"SubmittedBy" => "Member",
-		"Parent" => "UserDefinedForm",
+		"Parent" => "DataObject",
 	);
 	
 	private static $has_many = array( 

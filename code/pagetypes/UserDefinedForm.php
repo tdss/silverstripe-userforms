@@ -17,32 +17,48 @@ class UserDefinedForm extends Page {
 	private static $description = 'Adds a customizable form.';
 	
 	/**
-	 * @var array Fields on the user defined form page.
+	 * @var array $db
 	 */
 	private static $db = array(
-		"ClearButtonText" => "Varchar",
 		"OnCompleteMessage" => "HTMLText",
 		'EnableLiveValidation' => 'Boolean',
 		'HideFieldLabels' => 'Boolean'
 	);
 	
 	/**
-	 * @var array Default values of variables when this page is created
+	 * @var array $defaults 
 	 */ 
 	private static $defaults = array(
 		'Content' => '$UserDefinedForm',
-		'DisableSaveSubmissions' => 0,
 		'OnCompleteMessage' => '<p>Thanks, we\'ve received your submission.</p>'
 	);
 
 	/**
-	 * @var array
+	 * @var array $extensions
 	 */
 	private static $extensions = array(
 		'UserFormFieldEditorExtension',
 		'UserFormActionEditorExtension',
 		'UserFormSubmissionsExtension'
 	);
+
+	/**
+	 * @return FieldList
+	 */
+	public function getCMSFields() {
+		$complete = new CompositeField(
+			$label = new LabelField('OnCompleteMessageLabel',_t('UserDefinedForm.ONCOMPLETELABEL', 'Show on completion')),
+			$editor = new HtmlEditorField( "OnCompleteMessage", "", _t('UserDefinedForm.ONCOMPLETEMESSAGE', $this->OnCompleteMessage))
+		);
+
+		$complete->addExtraClass('field');
+
+		$this->beforeUpdateCMSFields(function($fields) {
+			$fields->addFieldToTab('Root.Main', $complete);
+		});
+	
+		return parent::getCMSFields();
+	}
 }
 
 /**
@@ -128,10 +144,7 @@ class UserDefinedForm_Controller extends Page_Controller {
 	 */
 	public function finished() {
 		return $this->customise(array(
-			'Content' => $this->customise(
-				array(
-					'Link' => $referrer
-				))->renderWith('ReceivedFormSubmission'),
+			'Content' => $this->renderWith('ReceivedFormSubmission'),
 			'Form' => ''
 		));
 	}

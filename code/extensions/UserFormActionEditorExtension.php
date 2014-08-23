@@ -6,7 +6,7 @@
 class UserFormActionEditorExtension extends DataExtension {
 	
 	private static $has_many = array(
-		"UserFormActions" => "UserFormSubmitAction"
+		"UserFormActions" => "UserFormAction"
 	);
 	
 	public function updateCMSFields(FieldList $fields) {

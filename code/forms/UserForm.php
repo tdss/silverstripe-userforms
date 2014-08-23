@@ -13,6 +13,15 @@ class UserForm extends Form {
 	private $dataSource;
 
 	/**
+	 * @var array $allowed_actions
+	 */
+	private static $allowed_actions = array(
+		'handleField',
+		'httpSubmission',
+		'forTemplate',
+	);
+
+	/**
 	 * @param Controller $controller
 	 * @param DataObject $dataSource
 	 * @param string $name
@@ -57,24 +66,33 @@ class UserForm extends Form {
 			$this->getRequiredFieldList()
 		);
 
+		// go through every action and make sure any modifications have taken
+		// place before applying extensions. Actions may require specific 
+		// markup or form modifications.
+		foreach($this->getEditableActions() as $action) {
+			$action->modifyForm($this);
+		}
+
+		// load the latest data from session.
 		$data = Session::get("FormInfo.{$this->FormName()}.data");
 		
 		if(is_array($data)) {
 			$this->loadDataFrom($data);
 		}
 
-		$this->extend('updateForm', $controller);
-		$this->setFormAction('UserFormProcessController/process');
+		$this->extend('updateForm');
 	}
 
 	/**
 	 * @return boolean
 	 */
 	public function validate() {
+		$data = $this->getData();
+
 		Session::set("FormInfo.{$this->FormName()}.data",$data);	
 		Session::clear("FormInfo.{$this->FormName()}.errors");
 		
-		foreach($this->getFieldList() as $field) {
+		foreach($this->getEditableFields() as $field) {
 			$messages[$field->Name] = $field->getErrorMessage()->HTML();
 			$formField = $field->getFormField();
 
@@ -101,12 +119,35 @@ class UserForm extends Form {
 	}
 
 	/**
+	 * @return SS_List
+	 */
+	public function getEditableFields() {
+		$fields = $this->dataSource->UserFormFields();
+		$this->extend('updateEditableFields', $fields);
+
+		return $fields;
+	}
+
+	/**
+	 * @return SS_List
+	 */
+	public function getEditableActions() {
+		$actions = $this->dataSource->UserFormActions();
+
+		$this->extend('updateEditableActions', $actions);
+
+		return $actions;
+	}
+
+	/**
+	 * Returns the {@link FieldList} for direct insertion into a form. 
+	 * 
 	 * @return FieldList
 	 */
 	public function getFieldList() {
 		$fields = new FieldList();
 
-		foreach($this->dataSource->UserFormFields() as $editableField) {
+		foreach($this->getEditableFields() as $editableField) {
 			$field = $editableField->getFormField();
 
 			if(!$field) {
@@ -157,17 +198,15 @@ class UserForm extends Form {
 	 * @return FieldList
 	 */
 	public function getActionButtonsList() {
-		$submitText = ($this->SubmitButtonText) ? $this->SubmitButtonText : _t('UserDefinedForm.SUBMITBUTTON', 'Submit');
-		$clearText = ($this->ClearButtonText) ? $this->ClearButtonText : _t('UserDefinedForm.CLEARBUTTON', 'Clear');
-		
-		$actions = new FieldList(
-			new FormAction("process", $submitText)
-		);
+		$actions = new FieldList();
 
-		if($this->ShowClearButton) {
-			$actions->push(new ResetFormAction("clearForm", $clearText));
+		foreach($this->getEditableActions() as $action) {
+			if($btn = $action->getFormAction()) {
+				$actions->push($btn);
+			}
 		}
-		
+
+
 		$this->extend('updateFormActions', $actions);
 
 		return $actions;
@@ -191,18 +230,31 @@ class UserForm extends Form {
 	}
 
 	/**
-	 * @return RelationalList
-	 */
-	public function getProcessActions() {
-		return $this->controller->UserFormActions();
-	}
-
-	/**
 	 * @return HTML
 	 */
 	public function forTemplate() {
 		Requirements::customScript($this->renderWith('ValidationScript'), 'UserFormsValidation');
 
 		return parent::forTemplate();
+	}
+
+	/**
+	 * @return DataObject
+	 */
+	public function getDataSource() {
+		return $this->dataSource;
+	}
+
+	/**
+	 * Process a the form.
+	 *
+	 * @param array $data
+	 * @param UserForm $form
+	 * @param SS_HTTPReques $request
+	 */
+	public function process($data, $form, $request) {
+		$process = Injector::inst()->create('UserFormProcessor');
+
+		return $process->process($data, $this, $request);
 	}
 }	

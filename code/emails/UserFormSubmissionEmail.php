@@ -1,21 +1,48 @@
 <?php
 
-
 /**
- * Email that gets sent to the people listed in the Email Recipients when a 
- * submission is made.
+ * An email that gets sent to a given email address, managed through a 
+ * {@link UserFormEmailAction} instance attached to the form.
  *
  * @package userforms
  */
 
 class UserFormSubmissionEmail extends Email {
 	
-	protected $ss_template = "UserFormSubmissionEmail";
 
-	protected $data;
+	/**
+	 * @param UserFormEmailAction $recipient
+	 * @param array $data
+	 */
+	public function __construct($recipient, $data) {
+		parent::__construct();
+		
+		$this->populateTemplate($data);
 
-	public function __construct($submittedFields = null) {
-		parent::__construct($submittedFields);
+		$this->setSubject($recipient->EmailSubject);
+		$this->setTo($recipient->getCalculatedToEmailAddress($data));
+				
+		if($recipient->EmailReplyTo) {
+			$this->setReplyTo($recipient->getCalculatedRelyToAddress($data));
+		}
+
+		if($recipient->SendPlain) {
+			$body = strip_tags($recipient->EmailBody) . "\n ";
+			
+			if(isset($data['Fields']) && !$recipient->HideFormData) {
+				foreach($data['Fields'] as $field) {
+					$body .= $field->Title .' - '. $field->Value ." \n";
+				}
+			}
+
+			$this->setBody($body);
+		} else {
+			$this->setBody($recipient->EmailBody);
+		}
+
+
+
+		$this->setTemplate("UserFormSubmissionEmail");
 	}
 	
 	/**	
