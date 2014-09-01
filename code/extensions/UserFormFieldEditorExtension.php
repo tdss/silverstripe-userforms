@@ -34,7 +34,18 @@ class UserFormFieldEditorExtension extends DataExtension {
 			_t('UserDefinedForm.CONFIGURATION', 'Configuration')
 		);
 
-		$form = new GridField(
+		$grid = $this->getFieldEditorGrid();
+
+		$fields->addFieldToTab("Root.Form", $grid);
+		
+		return $fields;
+	}
+
+	/**
+	 * @return GridField
+	 */
+	public function getFieldEditorGrid() {
+		$grid = new GridField(
 			"UserFormFields",
 			_t('UserDefinedForm.FIELDS', 'Fields'),
 			$this->owner->UserFormFields()
@@ -52,16 +63,20 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config->addComponent(new GridFieldDetailForm());
 		$config->addComponent(new GridFieldOrderableRows('Sort'));
 		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
+			'Icon' => function($record, $column, $grid) {
+				$icon = new LiteralField($column, sprintf("<img src='%s' />", $record->getIcon()));
+				$icon->setAllowHTML(true);
+
+				return $icon;
+			},
 			'Title' => function($record, $column, $grid) {
         		return new TextField($column);
     		}
 		)));
 
-		$form->setConfig($config);
+		$grid->setConfig($config);
 
-		$fields->addFieldToTab("Root.Form", $form);
-		
-		return $fields;
+		return $grid;
 	}
 
 	/**
