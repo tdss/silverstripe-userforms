@@ -9,6 +9,8 @@
 
 class EditableDropdown extends EditableMultipleOptionField {
 	
+	private static $hide_from_create = false;
+
 	private static $singular_name = 'Dropdown Field';
 	
 	private static $plural_name = 'Dropdowns';

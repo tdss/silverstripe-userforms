@@ -9,6 +9,8 @@
 
 class EditableRadioField extends EditableMultipleOptionField {
 	
+	private static $hide_from_create = false;
+
 	private static $singular_name = 'Radio field';
 	
 	private static $plural_name = 'Radio fields';

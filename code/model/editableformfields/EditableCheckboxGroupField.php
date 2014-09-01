@@ -9,6 +9,8 @@
 
 class EditableCheckboxGroupField extends EditableMultipleOptionField {
 
+	private static $hide_from_create = false;
+
 	private static $singular_name = "Checkbox Group";
 	
 	private static $plural_name = "Checkbox Groups";

@@ -74,6 +74,21 @@ class EditableFormField extends DataObject {
 	public function getSetsOwnError() {
 		return false;
 	}
+
+	/**
+	 * Can this instance be created?
+	 *
+	 * @todo canCreate cannot use parent
+	 *
+	 * @return boolean
+	 */
+	public function canCreate($member = null) {
+		if($this->config()->get('hide_from_create')) {
+			return false;
+		}
+
+		return parent::canCreate($member);
+	}
 	
 	/**
 	 * Return whether a user can delete this form field based on whether they 
@@ -82,7 +97,7 @@ class EditableFormField extends DataObject {
 	 * @return bool
 	 */
 	public function canDelete($member = null) {
-		return ($this->Parent()->canEdit($member));
+		return $this->canEdit($member);
 	}
 	
 	/**
@@ -92,7 +107,11 @@ class EditableFormField extends DataObject {
 	 * @return bool
 	 */
 	public function canEdit($member = null) {
-		return ($this->Parent()->canEdit($member));
+		if($this->Parent()) {
+			return $this->Parent()->canEdit($member);
+		}
+
+		return false;
 	}
 	
 	/**
