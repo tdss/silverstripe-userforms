@@ -113,6 +113,15 @@ class EditableFormField extends DataObject {
 
 		return false;
 	}
+
+	/**
+	 * @param Member $member
+	 *
+	 * @return bool
+	 */
+	public function canView($member = null) {
+		return $this->canEdit($member);
+	}
 	
 	/**
 	 * Publish this Form Field to the live site

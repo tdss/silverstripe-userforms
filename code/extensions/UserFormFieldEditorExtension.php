@@ -60,8 +60,8 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config->addComponent(new GridFieldEditButton());
 		$config->addComponent(new GridState_Component());
 		$config->addComponent(new GridFieldDeleteAction());
-		$config->addComponent(new GridFieldDetailForm());
 		$config->addComponent(new GridFieldOrderableRows('Sort'));
+		$config->addComponent(new GridFieldExpandableForm());
 		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
 			'Icon' => function($record, $column, $grid) {
 				$icon = new LiteralField($column, sprintf("<img src='%s' />", $record->getIcon()));
@@ -70,7 +70,7 @@ class UserFormFieldEditorExtension extends DataExtension {
 				return $icon;
 			},
 			'Title' => function($record, $column, $grid) {
-        		return new TextField($column);
+        		return new TextField($column, '	');
     		}
 		)));
 
