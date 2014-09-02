@@ -13,15 +13,23 @@ class EditableCheckbox extends EditableFormField {
 	
 	private static $plural_name = 'Checkboxes';
 	
-	public function getFieldConfiguration() {
-		$options = parent::getFieldConfiguration();
-		$options->push(new CheckboxField("Fields[$this->ID][CustomSettings][Default]", _t('EditableFormField.CHECKEDBYDEFAULT', 'Checked by Default?'), $this->getSetting('Default')));
-		
-		return $options;
+	public function getCMSFields() {
+		$this->beforeExtending('updateCMSFields', function($fields) {
+			$fields->push(new CheckboxField(
+				"CheckedByDefault", 
+				_t('EditableFormField.CHECKEDBYDEFAULT', 'Checked by Default?')
+			));
+		});
+
+		return parent::getCMSFields();
 	}
 	
 	public function getFormField() {
-		return new CheckboxField( $this->Name, $this->Title, $this->getSetting('Default'));
+		return new CheckboxField(
+			$this->Name, 
+			$this->Title, 
+			$this->getSetting('CheckedByDefault')
+		);
 	}
 	
 	public function getValueFromData($data) {

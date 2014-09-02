@@ -11,17 +11,21 @@ class EditableMemberListField extends EditableFormField {
 	
 	private static $plural_name = 'Member List Fields';
 	
-	public function getFieldConfiguration() {
-		$groupID = ($this->getSetting('GroupID')) ? $this->getSetting('GroupID') : 0;
-		$groups = DataObject::get("Group");
+	public function getCMSFields() {
+		$this->beforeExtending('updateCMSFields', function($fields) {
+			$groupID = ($this->getSetting('GroupID')) ? $this->getSetting('GroupID') : 0;
+			$groups = DataObject::get("Group");
 		
-		if($groups) $groups = $groups->map('ID', 'Title');
+			if($groups) {
+				$groups = $groups->map('ID', 'Title');
+			}
 		
-		$fields = new FieldList(
-			new DropdownField("Fields[$this->ID][CustomSettings][GroupID]", _t('EditableFormField.GROUP', 'Group'), $groups, $groupID)
-		);
-		
-		return $fields;
+			$fields = new FieldList(
+				new DropdownField("GroupID", _t('EditableFormField.GROUP', 'Group'), $groups, $groupID)
+			);
+		});
+
+		return parent::getCMSFields();
 	}
 	
 	public function getFormField() {

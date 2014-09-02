@@ -37,7 +37,11 @@ class UserFormAction extends DataObject {
 	 * @return boolean
 	 */
 	public function canCreate($member = null) {
-		return $this->Parent()->canCreate($member);
+		if($this->Parent()) {
+			return $this->Parent()->canCreate($member);
+		}
+
+		return parent::canCreate($member);
 	}
 
 	/**

@@ -31,7 +31,11 @@ class UserForm extends Form {
 			$dataSource = $controller->dataRecord();
 		}
 
-		if(!$dataSource->hasExtension('UserFormFieldEditorExtension')) {
+		if(!$dataSource && $controller->hasMethod('data')) {
+			$dataSource = $controller->data();
+		}
+		
+		if(!$dataSource || !$dataSource->hasExtension('UserFormFieldEditorExtension')) {
 			throw new InvalidArgumentException('Your $dataSource must apply the UserFormFieldEditorExtension');
 		}
 
@@ -216,13 +220,12 @@ class UserForm extends Form {
 	 * @return RequiredFields
 	 */
 	public function getRequiredFieldList() {
-		// Generate required field validator
-		$requiredNames = $this->dataSource
+		$required = $this->dataSource
 			->UserFormFields()
 			->filter('Required', true)
-			->column('Name');
+			->map('ID', 'Name');
 
-		$required = new RequiredFields($requiredNames);
+		$required = new RequiredFields($required->values());
 		
 		$this->extend('updateRequiredFields', $required);
 

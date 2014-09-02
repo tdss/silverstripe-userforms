@@ -299,34 +299,6 @@ class EditableFormFieldTest extends FunctionalTest {
 		
 		$this->assertEquals($dropdown->Options()->Count(), $count-1);
 	}
-	
-	function testEditableTextFieldConfiguration() {
-//		$text = $this->objFromFixture('EditableTextField', 'basic-text');
-		
-//		$configuration = $text->getFieldConfiguration();
-
-	}
-
-    function testExtendedEditableFormField() {
-        /** @var ExtendedEditableFormField $field */
-        $field = $this->objFromFixture('ExtendedEditableFormField', 'extended-field');
-
-        // Check db fields
-        $dbFields = $field->stat('db');
-        $this->assertTrue(array_key_exists('TestExtraField', $dbFields));
-        $this->assertTrue(array_key_exists('TestValidationField', $dbFields));
-
-        // Check Field Configuration
-        $fieldConfiguration = $field->getFieldConfiguration();
-        $extraField = $fieldConfiguration->dataFieldByName($field->getSettingName('TestExtraField'));
-        $this->assertNotNull($extraField);
-
-        // Check Validation Fields
-        $fieldValidation = $field->getFieldValidationOptions();
-        $validationField = $fieldValidation->dataFieldByName($field->getSettingName('TestValidationField'));
-        $this->assertNotNull($validationField);
-    }
-
 }
 
 /**

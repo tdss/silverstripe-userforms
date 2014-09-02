@@ -53,7 +53,7 @@ class UserDefinedForm extends Page {
 
 		$complete->addExtraClass('field');
 
-		$this->beforeUpdateCMSFields(function($fields) {
+		$this->beforeUpdateCMSFields(function($fields) use ($complete) {
 			$fields->addFieldToTab('Root.Main', $complete);
 		});
 	

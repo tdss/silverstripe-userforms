@@ -22,7 +22,6 @@ class EditableFormField extends DataObject {
 	 * @var array
 	 */
 	private static $db = array(
-		"Name" => "Varchar",
 		"Title" => "Varchar(255)",
 		"Default" => "Varchar",
 		"Sort" => "Int",
@@ -50,11 +49,17 @@ class EditableFormField extends DataObject {
 	 * @return FieldList
 	 */
 	public function getCMSFields() {
-		$fields = parent::getCMSFields();
+		$fields = $this->scaffoldFormFields(array(
+			'includeRelations' => false,
+			'tabbed' => false,
+			'ajaxSafe' => true
+		));
 
 		$fields->removeByName('Sort');
-		$fields->removeByName('Name');
 		$fields->removeByName('ParentID');
+		$fields->removeByName('VersionID');
+		$fields->removeByName('CustomRules');
+		$fields->removeByName('CustomSettings');
 
 		$fields->insertBefore(new ReadonlyField(
 			'Type', 
@@ -63,7 +68,16 @@ class EditableFormField extends DataObject {
 			'Title'
 		);
 
+		$this->extend('updateCMSFields', $fields);
+
 		return $fields;
+	}
+
+	/**
+	 * @return FieldList
+	 */
+	public function getExandableFormFields() {
+		return $this->getCMSFields();
 	}
 	
 	/**
@@ -73,6 +87,15 @@ class EditableFormField extends DataObject {
 	 */
 	public function getSetsOwnError() {
 		return false;
+	}
+
+	/**
+	 * Any field which is saved that isn't part of the model then save it as a
+	 * custom setting which is a serialized object on the base case.
+	 *
+	 */
+	public function onBeforeWrite() {
+		parent::onBeforeWrite();
 	}
 
 	/**
@@ -218,7 +241,14 @@ class EditableFormField extends DataObject {
 	public function Dependencies() {
 		return ($this->CustomRules) ? unserialize($this->CustomRules) : array();
 	}
-	
+
+	/**
+	 * @return string
+	 */
+	public function getName() {
+		return sprintf("%s%s", $this->ClassName, $this->ID);
+	}
+
 	/**
 	 * Return the custom validation fields for the field
 	 * 
@@ -236,7 +266,6 @@ class EditableFormField extends DataObject {
 				
 				foreach($fields as $field) {
 					$new = clone $field;
-
 					$new->isSelected = ($new->Name == $data['ConditionField']) ? true : false;
 					$outputFields->push($new);
 				}
@@ -253,57 +282,6 @@ class EditableFormField extends DataObject {
 		}
 	
 		return $output;
-	}
-	
-	/**
-	 * Implement custom field Configuration on this field. Includes such things as
-	 * settings and options of a given editable form field
-	 *
-	 * @return FieldSet
-	 */
-	public function getFieldConfiguration() {
-		$right = new TextField(
-			$this->getSettingName('RightTitle'), 
-			_t('EditableFormField.RIGHTTITLE', 'Right Title'), 
-			$this->getSetting('RightTitle')
-		);
-
-        $fields = FieldList::create(
-            $ec,
-            $right,
-            $hide = new CheckboxField(
-				$this->getSettingName('HideFromReports'),
-				_t('EditableFormField.HIDEFROMREPORT', 'Hide from reports?'), 
-				$this->getSetting('HideFromReports')
-			)
-        );
-
-        $this->extend('updateFieldConfiguration', $fields);
-        
-        return $fields;
-	}
-	
-	/**
-	 * Append custom validation fields to the default 'Validation' 
-	 * section in the editable options view
-	 * 
-	 * @return FieldSet
-	 */
-	public function getFieldValidationOptions() {
-		$fields = new FieldList(
-			new CheckboxField($this->getFieldName('Required'), _t('EditableFormField.REQUIRED', 'Is this field Required?'), $this->Required),
-			new TextField($this->getFieldName('CustomErrorMessage'), _t('EditableFormField.CUSTOMERROR','Custom Error Message'), $this->CustomErrorMessage)
-		);
-		
-		if(!$this->canEdit()) {
-			foreach($fields as $field) {
-				$field->performReadonlyTransformation();
-			}
-		}
-
-        $this->extend('updateFieldValidationOptions', $fields);
-		
-		return $fields;
 	}
 	
 	/**
@@ -353,6 +331,9 @@ class EditableFormField extends DataObject {
 			: array();
 	}
 	
+	/**
+	 * @return JSON
+	 */
 	public function getValidationJSON() {
 		return Convert::raw2json($this->getValidation());
 	}

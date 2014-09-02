@@ -54,23 +54,22 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config = new GridFieldConfig();
 		$config->addComponent(new GridFieldButtonRow('before'));
 		$config->addComponent(new GridFieldToolbarHeader());
-		$config->addComponent(new GridFieldAddNewMultiClass());
+		$config->addComponent(new GridFieldAddNewInlineButton());
 		$config->addComponent(new GridFieldAddExistingSearchButton());
-		$config->addComponent(new GridFieldDataColumns());
 		$config->addComponent(new GridFieldEditButton());
 		$config->addComponent(new GridState_Component());
 		$config->addComponent(new GridFieldDeleteAction());
 		$config->addComponent(new GridFieldOrderableRows('Sort'));
 		$config->addComponent(new GridFieldExpandableForm());
 		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
-			'Icon' => function($record, $column, $grid) {
-				$icon = new LiteralField($column, sprintf("<img src='%s' />", $record->getIcon()));
-				$icon->setAllowHTML(true);
+			'ClassName' => function($record, $column, $grid) {
+				$classes = new DropdownField($column, '', $this->getEditableFormClasses());
+				$classes->addExtraClass('classselector');
 
-				return $icon;
+				return $classes;
 			},
 			'Title' => function($record, $column, $grid) {
-        		return new TextField($column, '	');
+        		return TextField::create($column, '	')->setAttribute('placeholder', _t('UserDefinedForm.TITLE', 'Title'));
     		}
 		)));
 
@@ -103,6 +102,33 @@ class UserFormFieldEditorExtension extends DataExtension {
 	}
 
 	/**
+	 * @return array
+	 */
+	public function getEditableFormClasses() {
+		$classes = ClassInfo::getValidSubClasses('EditableFormField');
+		$result = array();
+
+		foreach($classes as $class => $title) {
+			if($class == "EditableFormField") {
+				continue;
+			}
+
+			if(!is_string($class)) {
+				$class = $title;
+				$title = singleton($class)->i18n_singular_name();
+			}
+
+			if(!singleton($class)->canCreate()) {
+				continue;
+			}
+
+			$result[$class] = $title;
+		}
+
+		return $result;
+	}
+
+	/**
 	 * When publishing this page, ensure that relations are published along with
 	 * the original record.
 	 *
@@ -122,10 +148,8 @@ class UserFormFieldEditorExtension extends DataExtension {
 			}
 		}
 
-		if($fields = $this->owner->Fields()) {
-			foreach($fields as $field) {
-				$field->doPublish('Stage', 'Live');
-			}
+		foreach($this->owner->UserFormFields() as $field) {
+			$field->doPublish('Stage', 'Live');
 		}
 	}
 
@@ -137,10 +161,8 @@ class UserFormFieldEditorExtension extends DataExtension {
 	 * @return void
 	 */
 	public function onAfterUnpublish() {
-		if($this->owner->Fields()) {
-			foreach($this->owner->Fields() as $field) {
-				$field->doDeleteFromStage('Live');
-			}
+		foreach($this->owner->UserFormFields() as $field) {
+			$field->doDeleteFromStage('Live');
 		}
 	}
 
@@ -151,46 +173,36 @@ class UserFormFieldEditorExtension extends DataExtension {
 	 * @return DataObject
 	 */
 	public function onAfterDuplicate($record, $doWrite = true) {
-		
-		// the form fields
-		if($record->Fields()) {
-			foreach($record->Fields() as $field) {
-				$newField = $field->duplicate();
-				$newField->ParentID = $this->owner->ID;
-				$newField->ParentClass = $this->owner->ClassName;
-				$newField->write();
-
-				$this->afterDuplicateField($page, $field, $newField);
-			}
+		foreach($record->UserFormFields() as $field) {
+			$newField = $field->duplicate();
+			$newField->ParentID = $this->owner->ID;
+			$newField->ParentClass = $this->owner->ClassName;
+			$newField->write();
 		}
 		
-		// the emails
-		if($this->EmailRecipients()) {
-			foreach($this->EmailRecipients() as $email) {
-				$newEmail = $email->duplicate();
-				$newEmail->FormID = $page->ID;
-				$newEmail->write();
-			}
+		foreach($this->UserFormActions() as $action) {
+			$newAction = $action->duplicate();
+			$newAction->ParentID = $page->ID;
+			$newAction->ParentClass = $page->ClassName;
+			$newAction->write();
 		}
 		
 		// Rewrite CustomRules
-		if($page->Fields()) {
-			foreach($page->Fields() as $field) {
-				// Rewrite name to make the CustomRules-rewrite below work.
-				$field->Name = $field->ClassName . $field->ID;
-				$rules = unserialize($field->CustomRules);
+		foreach($page->UserFormFields() as $field) {
+			// Rewrite name to make the CustomRules-rewrite below work.
+			$field->Name = $field->ClassName . $field->ID;
+			$rules = unserialize($field->CustomRules);
 
-				if (count($rules) && isset($rules[0]['ConditionField'])) {
-					$from = $rules[0]['ConditionField'];
+			if (count($rules) && isset($rules[0]['ConditionField'])) {
+				$from = $rules[0]['ConditionField'];
 
-					if (array_key_exists($from, $this->fieldsFromTo)) {
-						$rules[0]['ConditionField'] = $this->fieldsFromTo[$from];
-						$field->CustomRules = serialize($rules);
-					}
+				if (array_key_exists($from, $this->fieldsFromTo)) {
+					$rules[0]['ConditionField'] = $this->fieldsFromTo[$from];
+					$field->CustomRules = serialize($rules);
 				}
-
-				$field->Write();
 			}
+
+			$field->write();
 		}
 
 		return $page;

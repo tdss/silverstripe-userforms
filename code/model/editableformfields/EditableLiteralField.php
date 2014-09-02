@@ -2,7 +2,7 @@
 
 /**
  * Editable Literal Field. A literal field is just a blank slate where
- * you can add your own HTML / Images / Flash
+ * you can add your own HTML / Images / Flash.
  * 
  * @package userforms
  */
@@ -13,7 +13,7 @@ class EditableLiteralField extends EditableFormField {
 	
 	private static $plural_name = 'HTML Blocks';
 	
-	public function getFieldConfiguration() {
+	public function getCMSFields() {
 		$customSettings = unserialize($this->CustomSettings);	
 		$content = (isset($customSettings['Content'])) ? $customSettings['Content'] : '';
 		$textAreaField = new TextareaField(
@@ -21,12 +21,11 @@ class EditableLiteralField extends EditableFormField {
 			"HTML",
 			$content
 		);
+		
 		$textAreaField->setRows(4);
 		$textAreaField->setColumns(20);
-				
-		return new FieldList(
-			$textAreaField
-		);
+
+		return new FieldList($textAreaField);
 	}
 
 	public function getFormField() {
