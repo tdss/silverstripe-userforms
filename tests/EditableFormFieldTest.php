@@ -10,7 +10,7 @@ class EditableFormFieldTest extends FunctionalTest {
 
 	protected $extraDataObjects = array(
 		'ExtendedEditableFormField',
-		'EditableFormFieldExtension'
+		'EditableFormFieldTest_Extension'
 	);
 	
 	function testFormFieldPermissions() {
@@ -318,7 +318,7 @@ class ExtendedEditableFormField extends EditableFormField implements TestOnly
  * Used for testing extensions to EditableFormField and the extended Fields methods
  * @property EditableFormField owner
  */
-class EditableFormFieldExtension extends DataExtension implements TestOnly
+class EditableFormFieldTest_Extension extends DataExtension implements TestOnly
 {
     private static $db = array(
         'TestExtraField'      => 'Varchar',
