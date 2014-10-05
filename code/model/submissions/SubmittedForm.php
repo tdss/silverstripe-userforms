@@ -76,7 +76,7 @@ class SubmittedForm extends DataObject {
 	 * @return boolean
 	 */
 	public function canCreate($member = null) {
-		return $this->Parent()->canCreate();
+		return ($this->Parent()) ? $this->Parent()->canCreate() : true;
 	}
 
 	/**
