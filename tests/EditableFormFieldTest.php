@@ -302,32 +302,30 @@ class EditableFormFieldTest extends FunctionalTest {
 }
 
 /**
- * Class ExtendedEditableFormField
- * A base EditableFormFieldClass that will be extended with {@link EditableFormFieldExtension}
- * @mixin EditableFormFieldExtension
+ * @package userforms
+ * @subpackage tests
  */
-class ExtendedEditableFormField extends EditableFormField implements TestOnly
-{
+class ExtendedEditableFormFieldTest extends EditableFormField implements TestOnly {
+
     private static $extensions = array(
         'EditableFormFieldExtension'
     );
 }
 
 /**
- * Class EditableFormFieldExtension
- * Used for testing extensions to EditableFormField and the extended Fields methods
- * @property EditableFormField owner
+ * @package userforms
+ * @subpackage tests
  */
-class EditableFormFieldTest_Extension extends DataExtension implements TestOnly
-{
+class EditableFormFieldTest_Extension extends DataExtension implements TestOnly {
+
     private static $db = array(
         'TestExtraField'      => 'Varchar',
         'TestValidationField' => 'Boolean'
     );
 
-    public function updateFieldConfiguration(FieldList $fields)
-    {
+    public function updateFieldConfiguration(FieldList $fields) {
         $extraField = 'TestExtraField';
+        
         $fields->push(TextField::create(
             $this->owner->getSettingName($extraField),
             'Test extra field',
@@ -335,9 +333,9 @@ class EditableFormFieldTest_Extension extends DataExtension implements TestOnly
         ));
     }
 
-    public function updateFieldValidationOptions(FieldList $fields)
-    {
+    public function updateFieldValidationOptions(FieldList $fields) {
         $extraField = 'TestValidationField';
+
         $fields->push(CheckboxField::create(
             $this->owner->getSettingName($extraField),
             'Test validation field',
