@@ -70,6 +70,9 @@ class UserFormFieldEditorExtension extends DataExtension {
 			},
 			'Title' => function($record, $column, $grid) {
         		return TextField::create($column, '	')->setAttribute('placeholder', _t('UserDefinedForm.TITLE', 'Title'));
+		},
+		'Sort' => function($record, $column, $grid) {
+			return HiddenField::create($column, '', $record->Sort);
     		}
 		)));
 
