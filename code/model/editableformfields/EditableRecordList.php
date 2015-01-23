@@ -78,12 +78,17 @@ class EditableRecordList extends EditableParentFormField {
 		return $fields;
 	}
 
+	public function getValueFromData($data, $submissionCells) {
+		return null;
+	}
+
 	/**
 	 * Go through all the nested form fields and retrieve the information for
 	 * the additional cells.
 	 */
-	public function getValueFromData($data, $submissionCells) {
+	public function postProcessCell($data, $submissionCells) {
 		$processor = UserFormProcessor::create();
+		$count = 1;
 
 		if(isset($data[$this->Name]) && isset($data[$this->Name]['Records'])) {
 			foreach($data[$this->Name]['Records'] as $id => $fields) {
@@ -92,13 +97,15 @@ class EditableRecordList extends EditableParentFormField {
 						$editable = EditableFormField::get()->byId($matches[1]);
 
 						if($editable && $editable->canView()) {
+							$editable->Title = $count . '. '. $editable->Title;
+
 							$processor->processCell($fields, $editable, $submissionCells);
 						}
+
+						$count++;
 					}
 				}
 			}
 		}
-
-		return null;
 	}
 }

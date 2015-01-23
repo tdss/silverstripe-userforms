@@ -88,16 +88,7 @@ class EditableFormField extends DataObject {
 	public function getSetsOwnError() {
 		return false;
 	}
-
-	/**
-	 * Any field which is saved that isn't part of the model then save it as a
-	 * custom setting which is a serialized object on the base case.
-	 *
-	 */
-	public function onBeforeWrite() {
-		parent::onBeforeWrite();
-	}
-
+	
 	/**
 	 * Can this instance be created?
 	 *

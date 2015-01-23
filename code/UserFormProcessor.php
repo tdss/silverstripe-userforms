@@ -46,8 +46,8 @@ class UserFormProcessor extends Object {
 	 */
 	public function processCell($data, $field, $submissionCells) {
 		$cell = $field->getSubmittedFormField();
-		$cell->Name = $field->getField('Name');
-		$cell->Title = $field->getField('Title');
+		$cell->Name = $field->Name;
+		$cell->Title = $field->Title;
 			
 		if($field->hasMethod('getValueFromData')) {
 			$cell->Value = $field->getValueFromData($data, $submissionCells);
@@ -58,5 +58,11 @@ class UserFormProcessor extends Object {
 		}
 
 		$submissionCells->push($cell);
+
+		if($field->hasMethod('postProcessCell')) {
+			$field->postProcessCell($data, $submissionCells);
+		} else if($cell->hasMethod('postProcessCell')) {
+			$cell->postProcessCell($field, $data, $submissionCells);
+		}
 	}
 }
