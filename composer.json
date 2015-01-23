@@ -10,8 +10,12 @@
 	}],
 	"require": {
 		"silverstripe/framework": ">=3.1.0",
-		"colymba/gridfield-bulk-editing-tools": "2.0.0",
+		"colymba/gridfield-bulk-editing-tools": ">=2.0.0",
 		"silverstripe/gridfield-addons": "dev-master#6412ce18ee776ae6ef992980c01baa53a48b2be8",
-		"silverstripe-australia/gridfieldextensions": "dev-master"
+		"silverstripe-australia/gridfieldextensions": "*",
+		"unclecheese/display-logic": "*"
+	},
+	"suggest": {
+		"silverstripe/multiform": "Adds ability to break forms into steps."
 	}
 }

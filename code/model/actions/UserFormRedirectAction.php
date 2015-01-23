@@ -11,7 +11,7 @@ class UserFormRedirectAction extends UserFormAction {
 	 * {@inheritDoc}
 	 */
 	private static $db = array(
-		'RedirectType' => "Enum('Back, Action, Page, URL', 'Action')",
+		'RedirectType' => "Enum('Thanks, Page, URL', 'Thanks')",
 		'ActionName' => 'Varchar(255)',
 		'RedirectURL' => 'Varchar(255)',
 		'SubmitButtonText' => 'Varchar(50)'
@@ -27,39 +27,47 @@ class UserFormRedirectAction extends UserFormAction {
 	/**
 	 * {@inheritDoc}
 	 */
+	public function getTitle() {
+		return _t('UserFormRedirectAction.TITLE', 'Redirect User');
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public function getCMSFields() {
-		$options = array(
-			'Back' => _t('UserFormRedirectAction.BACK', 'Redirect back to previous page'),
-			'Action' => _t('UserFormRedirectAction.ACTION', 'An action on the current page'),
-			'URL' => _t('UserFormRedirectAction.URL', 'A given URL')
-		);
+		$this->beforeUpdateCMSFields(function($fields) {
+			$options = array(
+				'Thanks' => _t('UserFormRedirectAction.BACK', 'Show thanks content'),
+				'URL' => _t('UserFormRedirectAction.URL', 'A given URL')
+			);
 
-		if(class_exists('Page')) {
-			$options['Page'] = _t('UserFormRedirectAction.SEPARATEPAGE', 'A separate page.');			
-		}
+			if(class_exists('Page')) {
+				$options['Page'] = _t('UserFormRedirectAction.SEPARATEPAGE', 'A separate page');			
+			}
 
-		// @todo display logic?
-		$this->beforeUpdatingCMSFields(function($fields) {
 			$fields->addFieldsToTab('Root.Main', array(
-				new OptionsetField(
+				new DropdownField(
 					'RedirectType', 
-					_t('UserFormRedirectAction.REDIRECTTYPE', 'Redirect Location'),
+					_t('UserFormRedirectAction.REDIRECTTYPE', 'Redirect Type'),
 					$options
 				),
-				new TextField('ActionName', _t('UserFormRedirectAction.ACTIONNAME', 'Action name')),
-				new TextField('RedirectURL', _t('UserFormRedirectAction.URL', 'URL'))
+				$url = new TextField('RedirectURL', _t('UserFormRedirectAction.URL', 'URL'))
 			));
+
+			$url->hideUnless('RedirectType')->isEqualTo('URL');
 			
 			if(class_exists('Page')) {
-				$fields->addFieldToTab('Root.Main', new TreeDropdownField(
+				$fields->addFieldToTab('Root.Main', $page = new TreeDropdownField(
 					'RedirectPageID',
 					_t('UserFormRedirectAction.PAGE', 'Page'),
 					'Page'
 				));
+
+				$page->hideUnless('RedirectType')->isEqualTo('Page');
 			}
 		});
 
-		return $fields;
+		return parent::getCMSFields();
 	}
 
 	/**

@@ -134,7 +134,7 @@ class EditableFormField extends DataObject {
 			return $this->Parent()->canEdit($member);
 		}
 
-		return false;
+		return true;
 	}
 
 	/**

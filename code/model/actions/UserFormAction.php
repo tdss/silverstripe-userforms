@@ -32,6 +32,16 @@ class UserFormAction extends DataObject {
 	}
 
 	/**
+	 * @return FieldList
+	 */
+	public function getCMSFields() {
+		$fields = parent::getCMSFields();
+		$fields->removeByName('Sort');
+
+		return $fields;
+	}
+
+	/**
 	 * @param Member
 	 *
 	 * @return boolean
@@ -50,6 +60,10 @@ class UserFormAction extends DataObject {
 	 * @return boolean
 	 */
 	public function canView($member = null) {
+		if(!$this->Parent()) {
+			return true;
+		}
+
 		return $this->Parent()->canView($member);
 	}
 	
@@ -59,6 +73,10 @@ class UserFormAction extends DataObject {
 	 * @return boolean
 	 */
 	public function canEdit($member = null) {
+		if(!$this->Parent()) {
+			return true;
+		}
+
 		return $this->Parent()->canEdit($member);
 	}
 	
@@ -68,6 +86,10 @@ class UserFormAction extends DataObject {
 	 * @return boolean
 	 */
 	public function canDelete($member = null) {
+		if(!$this->Parent()) {
+			return true;
+		}
+
 		return $this->Parent()->canDelete($member);
 	}
 

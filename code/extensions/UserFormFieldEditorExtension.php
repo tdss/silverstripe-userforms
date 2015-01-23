@@ -235,19 +235,4 @@ class UserFormFieldEditorExtension extends DataExtension {
 			}
 		}
 	}
-
-	/**
-	 * Allow overriding the EmailRecipients on a {@link DataExtension}
-	 * so you can customise who receives an email.
-	 * Converts the RelationList to an ArrayList so that manipulation
-	 * of the original source data isn't possible.
-	 *
-	 * @return ArrayList
-	 */
-	public function FilteredEmailRecipients($data = null, $form = null) {
-		$recipients = new ArrayList($this->getComponents('EmailRecipients')->toArray());
-		$this->extend('updateFilteredEmailRecipients', $recipients, $data, $form);
-
-		return $recipients;
-	}
 }

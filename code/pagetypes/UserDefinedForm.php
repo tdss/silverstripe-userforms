@@ -128,12 +128,18 @@ class UserDefinedForm_Controller extends Page_Controller {
 
 	/**
 	 * Get the form for the page. Form can be modified by calling {@link updateForm()}
-	 * on a UserDefinedForm extension.
+	 * on a {@link UserForm} extension.
 	 *
 	 * @return Form|false
 	 */
 	public function Form() {
-		return new UserForm($this);
+		$form = UserForm::create($this);
+
+		if($form->isMultiStepForm()) {
+			return $form->upgradeToMultiStepForm();
+		}
+
+		return $form;
 	}
 	
 	/**

@@ -97,22 +97,7 @@ class UserForm extends Form {
 		Session::clear("FormInfo.{$this->FormName()}.errors");
 		
 		foreach($this->getEditableFields() as $field) {
-			$messages[$field->Name] = $field->getErrorMessage()->HTML();
-			$formField = $field->getFormField();
-
-			if($field->Required && $field->CustomRules()->Count() == 0) {
-				if(isset($data[$field->Name])) {
-					$formField->setValue($data[$field->Name]);
-				}
-
-				if(
-					!isset($data[$field->Name]) || 
-					!$data[$field->Name] ||
-					!$formField->validate($form->getValidator())
-				) {
-					$form->addErrorMessage($field->Name, $field->getErrorMessage(), 'bad');
-				}
-			}
+			$this->validateField($field, $data, $form);
 		}
 		
 		if(Session::get("FormInfo.{$this->FormName()}.errors")){
@@ -120,6 +105,25 @@ class UserForm extends Form {
 		}
 
 		return true;
+	}
+
+	public function validateField($field, $data, $form) {
+		$messages[$field->Name] = $field->getErrorMessage()->HTML();
+		$formField = $field->getFormField();
+
+		if($field->Required && $field->CustomRules()->Count() == 0) {
+			if(isset($data[$field->Name])) {
+				$formField->setValue($data[$field->Name]);
+			}
+
+			if(
+				!isset($data[$field->Name]) || 
+				!$data[$field->Name] ||
+				!$formField->validate($form->getValidator())
+			) {
+				$form->addErrorMessage($field->Name, $field->getErrorMessage(), 'bad');
+			}
+		}
 	}
 
 	/**
@@ -236,7 +240,10 @@ class UserForm extends Form {
 	 * @return HTML
 	 */
 	public function forTemplate() {
-		Requirements::customScript($this->renderWith('ValidationScript'), 'UserFormsValidation');
+		Requirements::customScript(
+			$this->renderWith('ValidationScript'), 
+			'UserFormsValidation'
+		);
 
 		return parent::forTemplate();
 	}
@@ -249,15 +256,37 @@ class UserForm extends Form {
 	}
 
 	/**
+	 * @return boolean
+	 */
+	public function isMultiStepForm() {
+		foreach($this->getEditableFields() as $editable) {
+			if($editable instanceof EditableFormPageBreak) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Process a the form.
 	 *
 	 * @param array $data
 	 * @param UserForm $form
-	 * @param SS_HTTPReques $request
+	 * @param SS_HTTPRequest $request
 	 */
 	public function process($data, $form, $request) {
 		$process = Injector::inst()->create('UserFormProcessor');
 
 		return $process->process($data, $this, $request);
+	}
+
+	/**
+	 * @return MultiStepUserForm
+	 */
+	public function upgradeToMultiStepForm() {
+		$form = MultiStepUserForm::create($this);
+
+		return $form;
 	}
 }	
