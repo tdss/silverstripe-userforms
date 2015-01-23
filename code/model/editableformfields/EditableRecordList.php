@@ -3,7 +3,7 @@
 /**
  * @package userforms
  */
-class EditableRecordList extends EditableFormField {
+class EditableRecordList extends EditableParentFormField {
 	
 	private static $singular_name = 'Record List';
 	
@@ -13,16 +13,36 @@ class EditableRecordList extends EditableFormField {
 		'UserFormFieldEditorExtension'
 	);
 
+	/**
+	 * @return array
+	 */
+	public function getVersionedChildrenLabels() {
+		return array(
+			'UserFormFields' => 'EditableFormField'
+		);
+	}
+
+	/**
+	 * @return FieldList
+	 */
 	public function getCMSFields() {
 		$this->beforeExtending('updateCMSFields', function($fields) {
 			$min = ($this->getSetting('MinRecords')) ? $this->getSetting('MinRecords') : '';
 			$max = ($this->getSetting('MaxRecords')) ? $this->getSetting('MaxRecords') : '';
 			
+			/*
 			$fields->push(new FieldGroup(
 				_t('EditableRecordList.RECORDLIMITS', 'Record Limits'),
 				new NumericField('MinRecords', "", $min),
 				new NumericField('MaxRecords', " - ", $max)
 			));
+			*/
+		});
+
+		$this->afterExtending('updateCMSFields', function($fields) {
+			$fields->removeByName('Default');
+			$fields->removeByName('Required');
+			$fields->removeByName('CustomErrorMessage');
 		});
 
 		return parent::getCMSFields();		
@@ -37,7 +57,7 @@ class EditableRecordList extends EditableFormField {
 		);
 
 		$fields->addExtraClass('udf_nested');
-		$nestedFields = new CompositeField();
+		$nestedFields = new FieldGroup();
 		$nestedFields->addExtraClass('udf_nested_nest');
 
 		foreach($this->UserFormFields() as $editableField) {

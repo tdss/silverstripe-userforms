@@ -54,7 +54,6 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config->addComponent(new GridFieldButtonRow('before'));
 		$config->addComponent(new GridFieldToolbarHeader());
 		$config->addComponent(new GridFieldAddNewInlineButton());
-		$config->addComponent(new GridFieldAddExistingSearchButton());
 		$config->addComponent(new GridFieldEditButton());
 		$config->addComponent(new GridState_Component());
 		$config->addComponent(new GridFieldDeleteAction());

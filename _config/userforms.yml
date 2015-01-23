@@ -8,4 +8,7 @@ LeftAndMain:
   extra_requirements_javascript:
     - gridfield-addons/javascript/GridFieldExpandableForm.js
   extra_requirements_css:
-    - gridfield-addons/css/GridFieldExpandableForm.css
+    - gridfield-addons/css/GridFieldExpandableForm.css\
+EditableFormField:
+  blacklisted_form_fields:
+    - EditableParentFormField

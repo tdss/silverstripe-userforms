@@ -101,12 +101,14 @@ class EditableFormField extends DataObject {
 	/**
 	 * Can this instance be created?
 	 *
-	 * @todo canCreate cannot use parent
-	 *
 	 * @return boolean
 	 */
 	public function canCreate($member = null) {
 		if($this->config()->get('hide_from_create')) {
+			return false;
+		}
+
+		if(in_array(get_class($this), $this->config()->get('blacklisted_form_fields'))) {
 			return false;
 		}
 
