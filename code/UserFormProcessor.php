@@ -12,7 +12,7 @@
  *
  * @package userforms
  */
-class UserFormProcessor {
+class UserFormProcessor extends Object {
 
 	/**
 	 * @param array $data
@@ -20,34 +20,43 @@ class UserFormProcessor {
 	 *
 	 */
 	public function process($data, $form, $request) {		
-		$submissionData = new ArrayList();
+		$submissionCells = new ArrayList();
 
 		foreach($form->getEditableFields() as $field) {
 			if(!$field->getShowInReports()) {
 				continue;
 			}
 			
-			$line = $field->getSubmittedFormField();
-			$line->Name = $field->getField('Name');
-			$line->Title = $field->getField('Title');
-			
-			if($field->hasMethod('getValueFromData')) {
-				$line->Value = $field->getValueFromData($data);
-			} else if($line->hasMethod('getValueFromData')) {
-				$line->Value = $line->getValueFromData($field, $data);
-			} else if(isset($data[$field->Name])) {
-				$line->Value = $data[$field->Name];
-			}
-
-			$submissionData->push($line);
+			$this->processCell($data, $field, $submissionCells);
 		}
 
 		foreach($form->getEditableActions() as $action) {
-			$action->processForm($form, $submissionData);
+			$action->processForm($form, $submissionCells);
 		}
 
 		// if none of the actions have redirected the user, then manually 
 		// redirect them back to the previous page.
 		return $form->getController()->redirectBack();
+	}
+
+	/**
+	 * @param array $data
+	 * @param EditableFormField $field
+	 * @param ArrayList $submissionCells
+	 */
+	public function processCell($data, $field, $submissionCells) {
+		$cell = $field->getSubmittedFormField();
+		$cell->Name = $field->getField('Name');
+		$cell->Title = $field->getField('Title');
+			
+		if($field->hasMethod('getValueFromData')) {
+			$cell->Value = $field->getValueFromData($data, $submissionCells);
+		} else if($cell->hasMethod('getValueFromData')) {
+			$cell->Value = $cell->getValueFromData($field, $data, $submissionCells);
+		} else if(isset($data[$field->Name])) {
+			$cell->Value = $data[$field->Name];
+		}
+
+		$submissionCells->push($cell);
 	}
 }

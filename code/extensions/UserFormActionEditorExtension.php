@@ -47,14 +47,18 @@ class UserFormActionEditorExtension extends DataExtension {
 		$fields->addFieldToTab('Root.Actions', $actions);
 	}
 
-	public function onBeforeWrite() {
+	public function onAfterWrite() {
 		if(!Config::inst()->get('UserFormActionEditorExtension', 'disable_default_action')) {
-			if(!$this->owner->UserFormActions()) {
+			if($this->owner->UserFormActions()->Count() == 0) {
+				$action = UserFormSaveAction::create();
+				$action->write();
+
 				$action = UserFormRedirectAction::create();
 				$action->RedirectType = 'Thanks';
 				$action->ActionName = 'thanks';
-				$action->Parent = $this->owner;
-				
+				$action->ParentID = $this->owner->ID;
+				$action->ParentClass = get_class($this->owner);
+
 				$action->write();
 			}
 		}

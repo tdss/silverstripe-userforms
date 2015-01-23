@@ -97,7 +97,7 @@ class UserForm extends Form {
 		Session::clear("FormInfo.{$this->FormName()}.errors");
 		
 		foreach($this->getEditableFields() as $field) {
-			$this->validateField($field, $data, $form);
+			$this->validateField($field, $data, $this);
 		}
 		
 		if(Session::get("FormInfo.{$this->FormName()}.errors")){
@@ -159,7 +159,7 @@ class UserForm extends Form {
 			$field = $editableField->getFormField();
 
 			if(!$field) {
-				break;
+				continue;
 			}
 
 			$field->setCustomValidationMessage(

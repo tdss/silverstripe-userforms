@@ -24,7 +24,7 @@ class EditableCheckboxGroupField extends EditableMultipleOptionField {
 		return new CheckboxSetField($this->Name, $this->Title, $optionMap);
 	}
 	
-	public function getValueFromData($data) {
+	public function getValueFromData($data, $submissionList) {
 		$result = '';
 		$entries = (isset($data[$this->Name])) ? $data[$this->Name] : false;
 		
@@ -32,6 +32,7 @@ class EditableCheckboxGroupField extends EditableMultipleOptionField {
 			if(!is_array($data[$this->Name])) {
 				$entries = array($data[$this->Name]);
 			}
+			
 			foreach($entries as $selected => $value) {
 				if(!$result) {
 					$result = $value;

@@ -8,6 +8,16 @@
  */
 class UserFormSaveAction extends UserFormAction {
 
+	public function getCMSFields() {
+		$fields = parent::getCMSFields();
+
+		$fields->addFieldToTab('Root.Main', new LiteralField('SaveDescription', 
+			_t('UserFormSaveAction.SAVEDESCRIPTION', 'This will save the information submitted in the form to the database. Submissions can be viewed under the submissions tab.')
+		));
+
+		return $fields;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

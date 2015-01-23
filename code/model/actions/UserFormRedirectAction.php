@@ -74,7 +74,13 @@ class UserFormRedirectAction extends UserFormAction {
 	 * {@inheritDoc}
 	 */
 	public function getFormAction() {
-		return new FormAction("process", $this->SubmitButtonText);
+		$text =  $this->SubmitButtonText;
+
+		if(!$text) {
+			$text = _t('UserFormRedirectAction.SUBMIT', 'Submit');
+		}
+
+		return new FormAction("process", $text);
 	}
 
 	/**
@@ -87,7 +93,7 @@ class UserFormRedirectAction extends UserFormAction {
 		} else {
 			// if the form has had tokens disabled we still need to set FormProcessed
 			// to allow us to get through the finished method
-			if (!$this->Form()->getSecurityToken()->isEnabled()) {
+			if (!$form->getSecurityToken()->isEnabled()) {
 				$randNum = rand(1, 1000);
 				$randHash = md5($randNum);
 				Session::set('FormProcessed',$randHash);
@@ -100,6 +106,8 @@ class UserFormRedirectAction extends UserFormAction {
 		switch($this->RedirectAction) {
 			case 'Action':
 				$link = $form->getController()->Link($this->ActionName);
+
+				break;
 			case 'Page':
 				if(class_exists('Page')) {
 					$page = Page::get()->byId($this->RedirectPageID);
@@ -108,8 +116,12 @@ class UserFormRedirectAction extends UserFormAction {
 						$link = $page->Link($this->ActionName);
 					}
 				}
+
+				break;
 			case 'URL':
 				$link = $this->RedirectURL;
+
+				break;
 		}
 
 		if($link) {

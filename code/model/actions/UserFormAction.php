@@ -23,6 +23,13 @@ class UserFormAction extends DataObject {
 	);
 
 	/**
+	 * @var array
+	 */
+	private static $summary_fields = array(
+		'Title'
+	);
+	
+	/**
 	 * Nice name for this action in the CMS editor
 	 *
 	 * @return string

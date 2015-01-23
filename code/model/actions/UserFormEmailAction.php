@@ -40,7 +40,13 @@ class UserFormEmailAction extends UserFormAction {
 	 * {@inheritDoc}
 	 */
 	public function getTitle() {
-		return _t('UserFormEmailAction.TITLE', 'Send Email Notification');
+		$title = _t('UserFormEmailAction.TITLE', 'Send Email Notification');
+
+		if($this->ID) {
+			$title .= ' ('. $this->EmailAddress . ', '. $this->EmailSubject .')';
+		}
+
+		return $title;
 	}
 
 	/**

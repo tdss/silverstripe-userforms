@@ -24,21 +24,20 @@ class UserFormFieldEditorExtension extends DataExtension {
 	 * @return FieldList
 	 */
 	public function updateCMSFields(FieldList $fields) {
-		$fields->findOrMakeTab(
-			'Root.Form', 
-			_t('UserDefinedForm.FORM', 'Form')
-		);
-
-		$fields->findOrMakeTab(
-			'Root.Options', 
-			_t('UserDefinedForm.CONFIGURATION', 'Configuration')
-		);
-
 		$grid = $this->getFieldEditorGrid();
 
-		$fields->addFieldToTab("Root.Form", $grid);
-		
-		return $fields;
+		if($fields->fieldByName('Root')) {
+			$fields->findOrMakeTab(
+				'Root.Form', 
+				_t('UserDefinedForm.FORM', 'Form')
+			);
+
+			$fields->addFieldToTab("Root.Form", $grid);
+
+			return $fields;
+		} else {
+			$fields->push($grid);
+		}
 	}
 
 	/**
@@ -60,7 +59,8 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config->addComponent(new GridState_Component());
 		$config->addComponent(new GridFieldDeleteAction());
 		$config->addComponent(new GridFieldOrderableRows('Sort'));
-		$config->addComponent(new GridFieldExpandableForm());
+		// $config->addComponent(new GridFieldExpandableForm());
+		$config->addComponent(new GridFieldDetailForm());
 		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
 			'ClassName' => function($record, $column, $grid) {
 				$classes = new DropdownField($column, '', $this->getEditableFormClasses());
