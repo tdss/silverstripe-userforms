@@ -40,5 +40,7 @@ class UserFormSaveAction extends UserFormAction {
 			$field->ParentID = $submission->ID;
 			$field->write();
 		}
+
+		$submission->extend('onCompletedSubmission');
 	}
 }

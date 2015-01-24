@@ -22,6 +22,8 @@ class UserFormProcessor extends Object {
 	public function process($data, $form, $request) {		
 		$submissionCells = new ArrayList();
 
+		$this->extend('onBeforeFormProcess', $data, $form);
+
 		foreach($form->getEditableFields() as $field) {
 			if(!$field->getShowInReports()) {
 				continue;
@@ -34,6 +36,8 @@ class UserFormProcessor extends Object {
 			$action->processForm($form, $submissionCells);
 		}
 
+		$this->extend('onAfterFormProcess', $data, $form);
+
 		// if none of the actions have redirected the user, then manually 
 		// redirect them back to the previous page.
 		return $form->getController()->redirectBack();
@@ -45,6 +49,8 @@ class UserFormProcessor extends Object {
 	 * @param ArrayList $submissionCells
 	 */
 	public function processCell($data, $field, $submissionCells) {
+		$this->extend('onBeforeProcessCell', $data, $field, $submissionCells);
+
 		$cell = $field->getSubmittedFormField();
 		$cell->Name = $field->Name;
 		$cell->Title = $field->Title;
@@ -64,5 +70,7 @@ class UserFormProcessor extends Object {
 		} else if($cell->hasMethod('postProcessCell')) {
 			$cell->postProcessCell($field, $data, $submissionCells);
 		}
+
+		$this->extend('onAfterProcessCell', $data, $field, $submissionCells);
 	}
 }
