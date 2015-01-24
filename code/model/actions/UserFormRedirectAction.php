@@ -12,7 +12,6 @@ class UserFormRedirectAction extends UserFormAction {
 	 */
 	private static $db = array(
 		'RedirectType' => "Enum('Thanks, Page, URL', 'Thanks')",
-		'ActionName' => 'Varchar(255)',
 		'RedirectURL' => 'Varchar(255)',
 		'SubmitButtonText' => 'Varchar(50)'
 	);
@@ -103,9 +102,9 @@ class UserFormRedirectAction extends UserFormAction {
 		
 		$link = false;
 
-		switch($this->RedirectAction) {
-			case 'Action':
-				$link = $form->getController()->Link($this->ActionName);
+		switch($this->RedirectType) {
+			case 'Thanks':
+				$link = $form->getController()->Link('finished');
 
 				break;
 			case 'Page':
@@ -113,7 +112,7 @@ class UserFormRedirectAction extends UserFormAction {
 					$page = Page::get()->byId($this->RedirectPageID);
 
 					if($page) {
-						$link = $page->Link($this->ActionName);
+						$link = $page->Link();
 					}
 				}
 
@@ -125,9 +124,9 @@ class UserFormRedirectAction extends UserFormAction {
 		}
 
 		if($link) {
-			$form->getController()->redirect($link);
+			return $form->getController()->redirect($link);
 		} else {
-			$form->getController()->redirectBack();
+			return $form->getController()->redirectBack();
 		}
 	}
 }

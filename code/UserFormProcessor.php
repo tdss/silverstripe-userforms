@@ -40,7 +40,9 @@ class UserFormProcessor extends Object {
 
 		// if none of the actions have redirected the user, then manually 
 		// redirect them back to the previous page.
-		return $form->getController()->redirectBack();
+		if(!Controller::curr()->redirectedTo()) {
+			return $form->getController()->redirect('finished');
+		}
 	}
 
 	/**
