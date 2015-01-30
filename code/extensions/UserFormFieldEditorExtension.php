@@ -58,6 +58,7 @@ class UserFormFieldEditorExtension extends DataExtension {
 		$config->addComponent(new GridState_Component());
 		$config->addComponent(new GridFieldDeleteAction());
 		$config->addComponent(new GridFieldOrderableRows('Sort'));
+
 		// $config->addComponent(new GridFieldExpandableForm());
 		$config->addComponent(new GridFieldDetailForm());
 		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
@@ -126,6 +127,8 @@ class UserFormFieldEditorExtension extends DataExtension {
 
 			$result[$class] = $title;
 		}
+
+		asort($result);
 
 		return $result;
 	}
