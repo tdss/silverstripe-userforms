@@ -28,7 +28,8 @@ class EditableFormField extends DataObject {
 		"Required" => "Boolean",
 		"CustomErrorMessage" => "Varchar(255)",
 		"CustomRules" => "Text",
-		"CustomSettings" => "Text"
+		"CustomSettings" => "Text",
+		"HideOnLoad" => 'Boolean'
 	);
 
 	/**
@@ -36,6 +37,13 @@ class EditableFormField extends DataObject {
 	 */
 	private static $has_one = array(
 		"Parent" => "DataObject",
+	);
+
+	/**
+	 * @var array
+	 */
+	private static $has_many = array(
+		"CustomRules" => "EditableCustomRule.Parent"
 	);
 	
 	/**
@@ -60,6 +68,8 @@ class EditableFormField extends DataObject {
 		$fields->removeByName('VersionID');
 		$fields->removeByName('CustomRules');
 		$fields->removeByName('CustomSettings');
+		$fields->removeByName('HideOnLoad');
+		$fields->removeByName('CustomRules');
 
 		$fields->insertBefore(new ReadonlyField(
 			'Type', 
@@ -67,6 +77,52 @@ class EditableFormField extends DataObject {
 			$this->config()->get('singular_name')), 
 			'Title'
 		);
+
+		$grid = new GridField(
+			"CustomRules",
+			_t('EditableFormField.CUSTOMRULES', 'Custom Rules'),
+			$this->CustomRules()
+		);
+
+		$config = new GridFieldConfig();
+		$config->addComponent(new GridFieldButtonRow('before'));
+		$config->addComponent(new GridFieldToolbarHeader());
+		$config->addComponent(new GridFieldAddNewInlineButton());
+		$config->addComponent(new GridState_Component());
+		$config->addComponent(new GridFieldDeleteAction());
+		$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
+			'Display' => '',
+			'ConditionFieldID' => function($record, $column, $grid) {
+				return DropdownField::create($column, '', EditableFormField::get()->filter(array(
+					'ParentID' => $this->ParentID
+				))->exclude(array(
+					'ID' => $this->ID
+				))->map('ID', 'Title'));
+			},
+			'ConditionOption' => function($record, $column, $grid) {
+				$options = Config::inst()->get('EditableCustomRule', 'condition_options');
+				$options = array_combine($options, $options);
+
+				return DropdownField::create($column, '', $options);
+			},
+			'FieldValue' => function($record, $column, $grid) {
+				return TextField::create($column);
+			},
+			'Parent' => function($record, $column, $grid) {
+				return HiddenField::create($column, '', $record->ParentID);
+    		}
+		)));
+
+		$grid->setConfig($config);
+
+		$fields->push(new ToggleCompositeField(
+			'CustomRulesSection', 
+			_t('EditableFormField.CUSTOMRULES', 'Custom Rules'),
+			array(
+				new CheckboxField('HideOnLoad'),
+				$grid
+			)
+		));
 
 		$this->extend('updateCMSFields', $fields);
 
@@ -78,6 +134,75 @@ class EditableFormField extends DataObject {
 	 */
 	public function getExandableFormFields() {
 		return $this->getCMSFields();
+	}
+
+	/**
+	 * Publishing Versioning support.
+	 *
+	 * When publishing it needs to handle copying across / publishing each of 
+	 * the individual field options
+	 * 
+	 * @return void
+	 */
+	public function doPublish($fromStage, $toStage, $createNewVersion = false) {
+		foreach($this->getVersionedChildrenLabels() as $label => $class) {
+			$live = Versioned::get_by_stage($class, "Live", "\"$class\".\"ParentID\" = $this->ID");
+
+			if($live) {
+				foreach($live as $record) {
+					$record->delete();
+				}
+			}
+
+			foreach($this->getComponents($label) as $inst) {
+				$inst->publish($fromStage, $toStage, $createNewVersion);
+			}
+		}
+
+		$this->publish($fromStage, $toStage, $createNewVersion);
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function doDeleteFromStage($stage) {
+		foreach($this->getVersionedChildrenLabels() as $label => $class) {
+			foreach($this->getComponents($label) as $inst) {
+				$inst->deleteFromStage($stage);
+			}
+		}
+		
+		$this->deleteFromStage($stage);
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function delete() {
+		foreach($this->getVersionedChildrenLabels() as $label => $class) {
+			foreach($this->getComponents($label) as $inst) {
+				$inst->delete();
+			}
+		}
+		
+		parent::delete(); 
+	}
+	
+	/**
+	 * @return DataObject
+	 */
+	public function duplicate($doWrite = true) {
+		$clonedNode = parent::duplicate();
+		
+		foreach($this->getVersionedChildrenLabels() as $label => $class) {
+			foreach($this->getComponents($label) as $inst) {
+				$newField = $inst->duplicate();
+				$newField->ParentID = $clonedNode->ID;
+				$newField->write();
+			}
+		}
+		
+		return $clonedNode;
 	}
 	
 	/**
@@ -140,33 +265,6 @@ class EditableFormField extends DataObject {
 	}
 	
 	/**
-	 * Publish this Form Field to the live site
-	 * 
-	 * Wrapper for the {@link Versioned} publish function
-	 */
-	public function doPublish($fromStage, $toStage, $createNewVersion = false) {
-		$this->publish($fromStage, $toStage, $createNewVersion);
-	}
-	
-	/**
-	 * Delete this form from a given stage.
-	 *
-	 * Wrapper for the {@link Versioned} deleteFromStage function
-	 */
-	public function doDeleteFromStage($stage) {
-		$this->deleteFromStage($stage);
-	}
-	
-	/**
-	 * Show this form on load or not
-	 *
-	 * @return bool
-	 */
-	public function getShowOnLoad() {
-		return ($this->getSetting('ShowOnLoad') == "Show" || $this->getSetting('ShowOnLoad') == '') ? true : false;
-	}
-	
-	/**
 	 * To prevent having tables for each fields minor settings we store it as 
 	 * a serialized array in the database. 
 	 * 
@@ -209,11 +307,13 @@ class EditableFormField extends DataObject {
 	 */
 	public function getSetting($setting) {
 		$settings = $this->getSettings();
+		
 		if(isset($settings) && count($settings) > 0) {
 			if(isset($settings[$setting])) {
 				return $settings[$setting];
 			}
 		}
+
 		return '';
 	}
 	
@@ -225,15 +325,6 @@ class EditableFormField extends DataObject {
 	public function getIcon() {
 		return USERFORMS_DIR . '/images/' . strtolower($this->class) . '.png';
 	}
-	
-	/**
-	 * Return the custom validation fields for this field for the CMS
-	 *
-	 * @return array
-	 */
-	public function Dependencies() {
-		return ($this->CustomRules) ? unserialize($this->CustomRules) : array();
-	}
 
 	/**
 	 * @return string
@@ -242,41 +333,6 @@ class EditableFormField extends DataObject {
 		return sprintf("%s%s", $this->ClassName, $this->ID);
 	}
 
-	/**
-	 * Return the custom validation fields for the field
-	 * 
-	 * @return DataObjectSet
-	 */
-	public function CustomRules() {
-		$output = new ArrayList();
-		$fields = $this->Parent()->Fields();
-
-		// check for existing ones
-		if($rules = $this->Dependencies()) {
-			foreach($rules as $rule => $data) {
-				// recreate all the field object to prevent caching
-				$outputFields = new ArrayList();
-				
-				foreach($fields as $field) {
-					$new = clone $field;
-					$new->isSelected = ($new->Name == $data['ConditionField']) ? true : false;
-					$outputFields->push($new);
-				}
-				
-				$output->push(new ArrayData(array(
-					'FieldName' => $this->getFieldName(),
-					'Display' => $data['Display'],
-					'Fields' => $outputFields,
-					'ConditionField' => $data['ConditionField'],
-					'ConditionOption' => $data['ConditionOption'],
-					'Value' => $data['Value']
-				)));
-			}
-		}
-	
-		return $output;
-	}
-	
 	/**
 	 * Return a {@link FormField{} to appear on the front end. Implement on your 
 	 * subclass.
@@ -345,5 +401,14 @@ class EditableFormField extends DataObject {
 		$errorMessage = (!empty($this->CustomErrorMessage)) ? $this->CustomErrorMessage : $standard;
 		
 		return DBField::create_field('Varchar', $errorMessage);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getVersionedChildrenLabels() {
+		return array(
+			'CustomRules' => 'EditableCustomRule'
+		);
 	}
 }

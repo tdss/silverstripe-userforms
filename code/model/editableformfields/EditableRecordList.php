@@ -3,7 +3,7 @@
 /**
  * @package userforms
  */
-class EditableRecordList extends EditableParentFormField {
+class EditableRecordList extends EditableFormField {
 	
 	private static $singular_name = 'Record List';
 	
@@ -17,9 +17,9 @@ class EditableRecordList extends EditableParentFormField {
 	 * @return array
 	 */
 	public function getVersionedChildrenLabels() {
-		return array(
+		return array_merge(array(
 			'UserFormFields' => 'EditableFormField'
-		);
+		), parent::getVersionedChildrenLabels());
 	}
 
 	/**

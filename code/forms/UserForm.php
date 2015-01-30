@@ -131,6 +131,7 @@ class UserForm extends Form {
 	 */
 	public function getEditableFields() {
 		$fields = $this->dataSource->UserFormFields();
+		
 		$this->extend('updateEditableFields', $fields);
 
 		return $fields;
@@ -244,6 +245,11 @@ class UserForm extends Form {
 			$this->renderWith('ValidationScript'), 
 			'UserFormsValidation'
 		);
+
+
+		$generator = UserFormsConditionalRuleGenerator::create();
+		$generator->setFields($this->getEditableFields());
+		$generator->generate();
 
 		return parent::forTemplate();
 	}

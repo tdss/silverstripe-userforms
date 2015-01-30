@@ -16,20 +16,20 @@ class UserFormsConditionalRuleGenerator extends Object {
 	protected $actions = null;
 
 	/**
-	 * @param FieldList
+	 * @param SS_List
 	 *
 	 * @return UserFormsConditionalRuleGenerator
 	 */
-	public function setFields(FieldList $fields) {
+	public function setFields($fields) {
 		$this->fields = $fields;
 	}
 
 	/**
-	 * @param FieldList
+	 * @param SS_List
 	 *
 	 * @return UserFormsConditionalRuleGenerator
 	 */
-	public function setActions(FieldList $actions) {
+	public function setActions($actions) {
 		$this->actions = $actions;
 	}
 
@@ -47,75 +47,63 @@ class UserFormsConditionalRuleGenerator extends Object {
 
 		if($this->fields) {
 			foreach($this->fields as $field) {
-				$fieldId = $field->Name;
+				$fieldId = 'UserForm_Form_' .$field->Name;
 				
-				if($field->ClassName == 'EditableFormHeading') { 
-					$fieldId = 'Form_Form_'.$field->Name;
-				}
-				
-				// Is this Field Show by Default
-				if(!$field->getShowOnLoad()) {
-					$default .= "$(\"#" . $fieldId . "\").hide();\n";
+				if($field->HideOnLoad) {
+					$default .= "$(\"#" . $fieldId . "_Holder\").hide();\n";
 				}
 
 				// Check for field dependencies / default
-				if($field->Dependencies()) {
-					foreach($field->Dependencies() as $dependency) {
-						if(is_array($dependency) && isset($dependency['ConditionField']) && $dependency['ConditionField'] != "") {
-							// get the field which is effected
-							$formName = Convert::raw2sql($dependency['ConditionField']);
-							$formFieldWatch = DataObject::get_one("EditableFormField", "\"Name\" = '$formName'");
-							
-							if(!$formFieldWatch) break;
-							
-							// watch out for multiselect options - radios and check boxes
+				if($field->CustomRules()) {
+					foreach($field->CustomRules() as $dependency) {
+						if($formFieldWatch = $dependency->ConditionField()) {
 							if(is_a($formFieldWatch, 'EditableDropdown')) {
-								$fieldToWatch = "$(\"select[name='".$dependency['ConditionField']."']\")";	
+								$fieldToWatch = "$(\"select[name='".$formFieldWatch->Name."']\")";	
+
 								$fieldToWatchOnLoad = $fieldToWatch;
 							}
 							// watch out for checkboxs as the inputs don't have values but are 'checked
 							else if(is_a($formFieldWatch, 'EditableCheckboxGroupField')) {
-								$fieldToWatch = "$(\"input[name='".$dependency['ConditionField']."[".$dependency['Value']."]']\")";
+								$fieldToWatch = "$(\"input[name='".$formFieldWatch->Name."[".$dependency->FieldValue."]']\")";
+
 								$fieldToWatchOnLoad = $fieldToWatch;
 							}
 							else if(is_a($formFieldWatch, 'EditableRadioField')) {
-								$fieldToWatch = "$(\"input[name='".$dependency['ConditionField']."']\")";
+								$fieldToWatch = "$(\"input[name='".$formFieldWatch->Name."']\")";
 								// We only want to trigger on load once for the radio group - hence we focus on the first option only.
-								$fieldToWatchOnLoad = "$(\"input[name='".$dependency['ConditionField']."']:first\")";
+								$fieldToWatchOnLoad = "$(\"input[name='".$formFieldWatch->Name."']:first\")";
 							}
 							else {
-								$fieldToWatch = "$(\"input[name='".$dependency['ConditionField']."']\")";
+								$fieldToWatch = "$(\"input[name='".$formFieldWatch->Name."']\")";
 								$fieldToWatchOnLoad = $fieldToWatch;
 							}
 							
 							// show or hide?
-							$view = (isset($dependency['Display']) && $dependency['Display'] == "Hide") ? "hide" : "show";
+							$view = strtolower($dependency->Display);
 							$opposite = ($view == "show") ? "hide" : "show";
-							
-							// what action do we need to keep track of. Something nicer here maybe?
-							// @todo encapulsation
+				
 							$action = "change";
 							
-							if($formFieldWatch->ClassName == "EditableTextField") {
+							if(is_a($formFieldWatch, "EditableTextField")) {
 								$action = "keyup";
 							}
 							
 							// is this field a special option field
 							$checkboxField = false;
 							$radioField = false;
+
 							if(in_array($formFieldWatch->ClassName, array('EditableCheckboxGroupField', 'EditableCheckbox'))) {
 								$action = "click";
 								$checkboxField = true;
-							}
-							else if ($formFieldWatch->ClassName == "EditableRadioField") {
+							} else if ($formFieldWatch->ClassName == "EditableRadioField") {
 								$radioField = true;
 							}
 							
 							// Escape the values.
-							$dependency['Value'] = str_replace('"', '\"', $dependency['Value']);
+							$value = str_replace('"', '\"', $dependency->FieldValue);
 
 							// and what should we evaluate
-							switch($dependency['ConditionOption']) {
+							switch($dependency->ConditionOption) {
 								case 'IsNotBlank':
 									$expression = ($checkboxField || $radioField) ? '$(this).attr("checked")' :'$(this).val() != ""';
 
@@ -129,26 +117,26 @@ class UserFormsConditionalRuleGenerator extends Object {
 										$expression = '$(this).attr("checked")';
 									} else if ($radioField) {
 										// We cannot simply get the value of the radio group, we need to find the checked option first.
-										$expression = '$(this).parents(".field, .control-group").find("input:checked").val()=="'. $dependency['Value'] .'"';
+										$expression = '$(this).parents(".field, .control-group").find("input:checked").val()=="'. $dependency->FieldValue .'"';
 									} else {
-										$expression = '$(this).val() == "'. $dependency['Value'] .'"';
+										$expression = '$(this).val() == "'. $dependency->FieldValue .'"';
 									}
 
 									break;
 								case 'ValueLessThan':
-									$expression = '$(this).val() < parseFloat("'. $dependency['Value'] .'")';
+									$expression = '$(this).val() < parseFloat("'. $dependency->FieldValue .'")';
 									
 									break;
 								case 'ValueLessThanEqual':
-									$expression = '$(this).val() <= parseFloat("'. $dependency['Value'] .'")';
+									$expression = '$(this).val() <= parseFloat("'. $dependency->FieldValue .'")';
 									
 									break;
 								case 'ValueGreaterThan':
-									$expression = '$(this).val() > parseFloat("'. $dependency['Value'] .'")';
+									$expression = '$(this).val() > parseFloat("'. $dependency->FieldValue .'")';
 
 									break;
 								case 'ValueGreaterThanEqual':
-									$expression = '$(this).val() >= parseFloat("'. $dependency['Value'] .'")';
+									$expression = '$(this).val() >= parseFloat("'. $dependency->FieldValue .'")';
 
 									break;	
 								default: // ==HasNotValue
@@ -156,9 +144,9 @@ class UserFormsConditionalRuleGenerator extends Object {
 										$expression = '!$(this).attr("checked")';
 									} else if ($radioField) {
 										// We cannot simply get the value of the radio group, we need to find the checked option first.
-										$expression = '$(this).parents(".field, .control-group").find("input:checked").val()!="'. $dependency['Value'] .'"';
+										$expression = '$(this).parents(".field, .control-group").find("input:checked").val()!="'. $dependency->FieldValue .'"';
 									} else {
-										$expression = '$(this).val() != "'. $dependency['Value'] .'"';
+										$expression = '$(this).val() != "'. $dependency->FieldValue .'"';
 									}
 								
 									break;
@@ -190,7 +178,7 @@ class UserFormsConditionalRuleGenerator extends Object {
 				foreach($values as $rule) {
 					// Register conditional behaviour with an element, so it can be triggered from many places.
 					$logic[] = sprintf(
-						'if(%s) { $("#%s").%s(); } else { $("#%2$s").%s(); }', 
+						'if(%s) { $("#%s_Holder").%s(); } else { $("#%2$s_Holder").%s(); }', 
 						$rule['expression'], 
 						$rule['field_id'], 
 						$rule['view'], 
@@ -233,3 +221,4 @@ JS
 , 'UserFormsConditional');
 		}
 	}
+}

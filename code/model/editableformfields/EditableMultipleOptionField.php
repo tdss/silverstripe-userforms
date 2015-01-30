@@ -13,7 +13,7 @@
  * @package userforms
  */
 
-class EditableMultipleOptionField extends EditableParentFormField {
+class EditableMultipleOptionField extends EditableFormField {
 	
 	private static $hide_from_create = true;
 	
@@ -25,9 +25,9 @@ class EditableMultipleOptionField extends EditableParentFormField {
 	 * @return array
 	 */
 	public function getVersionedChildrenLabels() {
-		return array(
+		return array_merge(array(
 			'Options' => 'EditableOption'
-		);
+		), parent::getVersionedChildrenLabels());
 	}
 
 	/**
