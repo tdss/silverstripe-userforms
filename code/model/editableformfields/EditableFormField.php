@@ -114,10 +114,11 @@ class EditableFormField extends DataObject {
 		)));
 
 		$grid->setConfig($config);
+		$count = sprintf(" (%s)", $this->CustomRules()->Count());
 
 		$fields->push(new ToggleCompositeField(
 			'CustomRulesSection', 
-			_t('EditableFormField.CUSTOMRULES', 'Custom Rules'),
+			_t('EditableFormField.CUSTOMRULES', 'Custom Rules') . $count,
 			array(
 				new CheckboxField('HideOnLoad'),
 				$grid
@@ -134,6 +135,24 @@ class EditableFormField extends DataObject {
 	 */
 	public function getExandableFormFields() {
 		return $this->getCMSFields();
+	}
+
+	/**
+	 * Save custom settings
+	 */
+	public function onBeforeWrite() {
+		parent::onBeforeWrite();
+
+		$fields = $this->toMap();
+		$settings = array();
+
+		foreach($fields as $field => $value) {
+			if(preg_match("/^CustomSettings\[((\w)+)\]$/", $field, $matches)) {
+				$settings[$matches[1]] = $value;
+			}
+		}
+
+		$this->setSettings($settings);
 	}
 
 	/**
@@ -315,6 +334,13 @@ class EditableFormField extends DataObject {
 		}
 
 		return '';
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSettingName($name) {
+		return sprintf("CustomSettings[%s]", $name);
 	}
 	
 	/**

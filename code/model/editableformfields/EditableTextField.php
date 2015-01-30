@@ -21,8 +21,8 @@ class EditableTextField extends EditableFormField {
 			
 			$fields->push(new FieldGroup(
 				_t('EditableTextField.TEXTLENGTH', 'Text length'),
-				new NumericField('MinLength', "", $min),
-				new NumericField('MaxLength', " - ", $max)
+				new NumericField($this->getSettingName('MinLength'), "", $min),
+				new NumericField($this->getSettingName('MaxLength'), " - ", $max)
 			));
 
 			$fields->push(new NumericField('Rows', _t('EditableTextField.NUMBERROWS',

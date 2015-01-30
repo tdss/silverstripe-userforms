@@ -1,4 +1,5 @@
 <?php
+
 /**
  * EditableRadioField
  *
@@ -15,6 +16,9 @@ class EditableRadioField extends EditableMultipleOptionField {
 	
 	private static $plural_name = 'Radio fields';
 	
+	/**
+	 * @return OptionsetField
+	 */
 	public function getFormField() {
 		$optionSet = $this->Options();
 		$options = array();
@@ -25,6 +29,6 @@ class EditableRadioField extends EditableMultipleOptionField {
 			}	
 		}
 		
-		return new OptionsetField($this->Name, $this->Title, $options);
+		return OptionsetField::create($this->Name, $this->Title, $options);
 	}
 }

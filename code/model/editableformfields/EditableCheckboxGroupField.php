@@ -1,4 +1,5 @@
 <?php
+
 /**
  * EditableCheckboxGroup
  *
@@ -41,6 +42,7 @@ class EditableCheckboxGroupField extends EditableMultipleOptionField {
 				}
 			}
 		}
+
 		return $result;
 	}
 }
