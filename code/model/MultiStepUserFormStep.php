@@ -53,7 +53,7 @@ if(class_exists('MultiForm')) {
 				}
 
 				if($page == $this->StepIndex) {
-					$editable->push($page);
+					$editable->push($field);
 				}
 			}
 
