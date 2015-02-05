@@ -144,7 +144,7 @@ class EditableFormField extends DataObject {
 		parent::onBeforeWrite();
 
 		$fields = $this->toMap();
-		$settings = array();
+		$settings = $this->getSettings();
 
 		foreach($fields as $field => $value) {
 			if(preg_match("/^CustomSettings\[((\w)+)\]$/", $field, $matches)) {

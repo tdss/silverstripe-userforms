@@ -19,7 +19,7 @@ class EditableOption extends DataObject {
 	);
 	
 	private static $has_one = array(
-		"Parent" => "EditableMultipleOptionField",
+		"Parent" => "EditableMultipleOptionField"
 	);
 	
 	private static $extensions = array(
