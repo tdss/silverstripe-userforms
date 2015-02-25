@@ -29,4 +29,17 @@ class EditableOption extends DataObject {
     public function getEscapedTitle() {
         return Convert::raw2att($this->Title);
     }
+
+    public function onBeforeWrite() {
+    	parent::onBeforeWrite();
+
+    	if(!$this->Sort) {
+			$parentID = ($this->ParentID) ? $this->ParentID : 0;
+			
+			$this->Sort = DB::prepared_query(
+				"SELECT MAX(\"Sort\") + 1 FROM \"SiteTree\" WHERE \"ParentID\" = ?", 
+				array($parentID)
+			)->value();
+		}
+    }
 }

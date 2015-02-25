@@ -85,14 +85,14 @@ if(class_exists('MultiForm')) {
 		 * @return boolean
 		 */
 		public function validateStep($data, $form) {
-			Session::set("FormInfo.{$this->FormName()}.data",$data);	
-			Session::clear("FormInfo.{$this->FormName()}.errors");
+			Session::set("FormInfo.{$form->FormName()}.data",$data);	
+			Session::clear("FormInfo.{$form->FormName()}.errors");
 			
 			foreach($this->getEditableFields() as $field) {
-				$this->validateField($field, $data, $form);
+				$this->getUserForm()->validateField($field, $data, $form);
 			}
 			
-			if(Session::get("FormInfo.{$this->FormName()}.errors")){
+			if(Session::get("FormInfo.{$form->FormName()}.errors")){
 				return false;
 			}
 
