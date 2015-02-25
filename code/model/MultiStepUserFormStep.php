@@ -69,7 +69,7 @@ if(class_exists('MultiForm')) {
 
 			foreach($fields as $field) {
 				if($field->Required) {
-					$required->addRequiredField($field);
+					$required->addRequiredField($field->getName());
 				}
 			}
 		
