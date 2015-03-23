@@ -35,8 +35,8 @@ class EditableCreditCardField extends EditableFormField {
 			$months = range(1, 12);
 			$years = range(date('Y'), date('Y') + 20);
 
-			$month = DropdownField::create($this->Name . '_ExpiryMonth', _t('EditableCreditCardField.EXPIRYMONTH', 'Expiry Month'), $months);
-			$year = DropdownField::create($this->Name . '_ExpiryYear', _t('EditableCreditCardField.EXPIRYYEAR', 'Expiry Year'), $years);
+			$month = DropdownField::create($this->Name . '_ExpiryMonth', _t('EditableCreditCardField.EXPIRYMONTH', 'Expiration Month'), $months);
+			$year = DropdownField::create($this->Name . '_ExpiryYear', _t('EditableCreditCardField.EXPIRYYEAR', 'Expiration Year'), $years);
 
 			return new FieldGroup($cc, $month, $year);
 		}
