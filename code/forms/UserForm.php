@@ -97,7 +97,7 @@ class UserForm extends Form {
 		Session::clear("FormInfo.{$this->FormName()}.errors");
 		
 		foreach($this->getEditableFields() as $field) {
-			$this->validateField($field, $data, $this);
+			$field->validateField($data, $this);
 		}
 		
 		if(Session::get("FormInfo.{$this->FormName()}.errors")){
@@ -105,25 +105,6 @@ class UserForm extends Form {
 		}
 
 		return true;
-	}
-
-	public function validateField($field, $data, $form) {
-		$messages[$field->Name] = $field->getErrorMessage()->HTML();
-		$formField = $field->getFormField();
-
-		if($field->Required && $field->CustomRules()->Count() == 0) {
-			if(isset($data[$field->Name])) {
-				$formField->setValue($data[$field->Name]);
-			}
-
-			if(
-				!isset($data[$field->Name]) || 
-				!$data[$field->Name] ||
-				!$formField->validate($form->getValidator())
-			) {
-				$form->addErrorMessage($field->Name, $field->getErrorMessage(), 'bad');
-			}
-		}
 	}
 
 	/**

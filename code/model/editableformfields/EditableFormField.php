@@ -156,7 +156,7 @@ class EditableFormField extends DataObject {
 
 		if(!$this->Sort) {
 			$parentID = ($this->ParentID) ? $this->ParentID : 0;
-			
+
 			$this->Sort = DB::prepared_query(
 				"SELECT MAX(\"Sort\") + 1 FROM \"SiteTree\" WHERE \"ParentID\" = ?", 
 				array($parentID)
@@ -445,5 +445,28 @@ class EditableFormField extends DataObject {
 		return array(
 			'CustomRules' => 'EditableCustomRule'
 		);
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function validateField($data, $form) {
+		if($this->Required && $this->CustomRules()->Count() == 0) {
+			$formField = $this->getFormField();
+
+			if(isset($data[$this->Name])) {
+				$formField->setValue($data[$this->Name]);
+			}
+
+			if(
+				!isset($data[$this->Name]) || 
+				!$data[$this->Name] ||
+				!$formField->validate($form->getValidator())
+			) {
+				$form->addErrorMessage($this->Name, $this->getErrorMessage(), 'bad');
+			}
+		}
+
+		return true;
 	}
 }
