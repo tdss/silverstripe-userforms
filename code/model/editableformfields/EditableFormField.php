@@ -158,7 +158,7 @@ class EditableFormField extends DataObject {
 			$parentID = ($this->ParentID) ? $this->ParentID : 0;
 
 			$this->Sort = DB::prepared_query(
-				"SELECT MAX(\"Sort\") + 1 FROM \"SiteTree\" WHERE \"ParentID\" = ?", 
+				"SELECT MAX(\"Sort\") + 1 FROM \"EditableFormField\" WHERE \"ParentID\" = ?", 
 				array($parentID)
 			)->value();
 		}
