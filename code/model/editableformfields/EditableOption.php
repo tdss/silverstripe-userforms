@@ -18,6 +18,10 @@ class EditableOption extends DataObject {
 		"Sort" => "Int"
 	);
 	
+	private static $summary_fields = array(
+		'Title'
+	);
+
 	private static $has_one = array(
 		"Parent" => "EditableMultipleOptionField"
 	);
@@ -37,7 +41,7 @@ class EditableOption extends DataObject {
 			$parentID = ($this->ParentID) ? $this->ParentID : 0;
 			
 			$this->Sort = DB::prepared_query(
-				"SELECT MAX(\"Sort\") + 1 FROM \"SiteTree\" WHERE \"ParentID\" = ?", 
+				"SELECT MAX(\"Sort\") + 1 FROM \"EditableOption\" WHERE \"ParentID\" = ?", 
 				array($parentID)
 			)->value();
 		}

@@ -21,6 +21,30 @@ class EditableMultipleOptionField extends EditableFormField {
 		"Options" => "EditableOption"
 	);
 
+	public function getCMSFields() {
+		$this->beforeUpdateCMSFields(function(FieldList $fields) {
+			$options = new GridField('Options', _t('EditableMultipleOptionField.OPTIONS', 'Options'), $this->Options());
+			$fields->push($options);
+
+			$config = new GridFieldConfig();
+			$config->addComponent(new GridFieldButtonRow('before'));
+			$config->addComponent(new GridFieldAddNewInlineButton());
+			$config->addComponent(new GridState_Component());
+			$config->addComponent(new GridFieldDeleteAction());
+			$config->addComponent(new GridFieldOrderableRows('Sort'));
+			$config->addComponent((new GridFieldEditableColumns())->setDisplayFields(array(
+				'Title' => function($record, $column, $grid) {
+					return TextField::create($column, "&nbsp;")->
+						setTitle('Hi')
+						->setAttribute('placeholder', _t('UserDefinedForm.TITLE', 'Title'));
+				}
+			)));
+
+			$options->setConfig($config);
+		});
+
+		return parent::getCMSFields();
+	}
 	/**
 	 * @return array
 	 */
