@@ -89,7 +89,7 @@ if(class_exists('MultiForm')) {
 			Session::clear("FormInfo.{$form->FormName()}.errors");
 			
 			foreach($this->getEditableFields() as $field) {
-				$this->getUserForm()->validateField($field, $data, $form);
+				$field->validateField($data, $form);
 			}
 			
 			if(Session::get("FormInfo.{$form->FormName()}.errors")){
