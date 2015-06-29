@@ -123,13 +123,13 @@ class UserDefinedFormControllerTest extends FunctionalTest {
 		
 		// test custom right title
 		$field = $form->Fields()->First();
-		$field->setSetting('RightTitle', 'Right Title');
+		$field->setSetting('RightTitle', 'Subtitle');
 		$field->write();
 		
 		$controller = new UserDefinedFormControllerTest_Controller($form);
 		$fields = $controller->getFormFields();
 
-		$this->assertEquals($fields->First()->RightTitle(), "Right Title");
+		$this->assertEquals($fields->First()->RightTitle(), "Subtitle");
 		
 		// test empty form
 		$emptyForm = $this->objFromFixture('UserDefinedForm', 'empty-form');

@@ -424,7 +424,7 @@ class EditableFormField extends DataObject {
 		
 		$right = new TextField(
 			$this->getSettingName('RightTitle'), 
-			_t('EditableFormField.RIGHTTITLE', 'Right Title'), 
+			_t('EditableFormField.RIGHTTITLE', 'Subtitle'), 
 			$this->getSetting('RightTitle')
 		);
 
